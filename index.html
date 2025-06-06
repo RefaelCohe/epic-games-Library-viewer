@@ -980,9 +980,9 @@
 
             const imageHTML = `
                 <div class="card-image-container">
-                    <img src="${game.imageUrl || ''}" 
+                    <img src="${game.imageUrl || './images/placeholder.jpg'}" 
                          alt="${game.name}" 
-                         onerror="this.onerror=null; this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDYwIiBoZWlnaHQ9IjIxNSIgdmlld0JveD0iMCAwIDQ2MCAyMTUiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI0NjAiIGhlaWdodD0iMjE1IiBmaWxsPSIjRjBGMEYwIi8+CjxwYXRoIGQ9Ik0yMzAgMTA3LjVMMjQ1IDE5Mkgy4zUiIHN0cm9rZT0iIzk5OTk5OSIgc3Ryb2tlLXdpZHRoPSIzIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KPHRleHQgeD0iMjMwIiB5PSIxMDAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OTk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+SW1hZ2UgTm90IEZvdW5kPC90ZXh0Pgo8L3N2Zz4K';">
+                         onerror="this.onerror=null; this.src='./images/placeholder.jpg';">
                 </div>`;
 
             const copyBtnHTML = `<button class="copy-btn" title="Copy">${icons.copy}</button>`;
