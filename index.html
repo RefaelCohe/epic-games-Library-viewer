@@ -1,0 +1,1191 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Epic Games Library Viewer</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap');
+        
+        :root {
+            /* Light Theme (Default) */
+            --bg-color: #f4f7f9;
+            --card-bg-color: #ffffff;
+            --controls-bg-color: #ffffff;
+            --primary-text-color: #1a1a1a;
+            --secondary-text-color: #5c5c5c;
+            --accent-color: #007bff;
+            --discount-color: #218838;
+            --card-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            --card-hover-shadow: 0 8px 24px rgba(0,0,0,0.12);
+            --border-color: #e1e4e8;
+            --input-bg-color: #f4f7f9;
+            --date-picker-filter: invert(0%);
+        }
+
+        [data-theme='dark'] {
+            /* Dark Theme Override */
+            --bg-color: #121212;
+            --card-bg-color: #333336;
+            --controls-bg-color: #2a2a2e;
+            --primary-text-color: #e0e0e0;
+            --secondary-text-color: #b0b0b0;
+            --discount-color: #28a745;
+            --card-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            --card-hover-shadow: 0 8px 24px rgba(0,0,0,0.5);
+            --border-color: #2c2c2c;
+            --input-bg-color: #333;
+            --date-picker-filter: invert(100%);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme]) {
+                --bg-color: #121212;
+                --card-bg-color: #333336;
+                --controls-bg-color: #2a2a2e;
+                --primary-text-color: #e0e0e0;
+                --secondary-text-color: #b0b0b0;
+                --discount-color: #28a745;
+                --card-shadow: 0 4px 12px rgba(42, 42, 42, 0.3);
+                --card-hover-shadow: 0 8px 24px rgba(0,0,0,0.5);
+                --border-color: #2c2c2c;
+                --input-bg-color: #333;
+                --date-picker-filter: invert(100%);
+            }
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--primary-text-color);
+            margin: 0;
+            padding: 2rem;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        
+        .container { 
+            width: 100%; 
+            max-width: 1800px; 
+            margin: 0 auto; 
+        }
+
+        /* ===== FILE UPLOAD AREA ===== */
+        .upload-area {
+            border: 3px dashed var(--accent-color);
+            border-radius: 12px;
+            padding: 3rem;
+            text-align: center;
+            margin-bottom: 2rem;
+            background-color: var(--card-bg-color);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .upload-area.dragover {
+            border-color: var(--discount-color);
+            background-color: rgba(33, 136, 56, 0.1);
+            transform: scale(1.02);
+        }
+
+        .upload-area h2 {
+            margin: 0 0 1rem 0;
+            color: var(--accent-color);
+            font-size: 1.8rem;
+        }
+
+        .upload-area p {
+            color: var(--secondary-text-color);
+            font-size: 1.1rem;
+            margin: 0.5rem 0;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .upload-btn {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-top: 1rem;
+            transition: background-color 0.3s;
+        }
+
+        .upload-btn:hover {
+            background-color: #0056b3;
+        }
+
+        /* ===== HEADER ===== */
+        .app-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            flex-grow: 1;
+        }
+        
+        .header-left h1 {
+            margin: 0;
+            white-space: nowrap;
+        }
+
+        .search-wrapper {
+            position: relative;
+            min-width: 300px;
+        }
+
+        #search-input {
+            width: 100%;
+            padding: 10px 15px;
+            padding-right: 80px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background-color: var(--input-bg-color);
+            color: var(--primary-text-color);
+            font-size: 1rem;
+            font-family: inherit;
+        }
+
+        #search-counter {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--secondary-text-color);
+            font-size: 0.9rem;
+        }
+
+        .app-header-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .file-upload-label, #toggle-controls-btn, #show-stats-btn {
+            display: inline-block;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            font-weight: 500;
+            border: none;
+            text-decoration: none;
+        }
+
+        #toggle-controls-btn {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        #toggle-controls-btn:hover {
+            background-color: #5a6268;
+        }
+
+        #show-stats-btn {
+            background-color: #17a2b8;
+            color: white;
+        }
+
+        #show-stats-btn:hover {
+            background-color: #138496;
+        }
+
+        /* ===== CONTROLS ===== */
+        .controls-container {
+            background: var(--controls-bg-color);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border-radius: 12px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            align-items: flex-end;
+            overflow: hidden;
+            max-height: 500px;
+            border: 1px solid var(--border-color);
+            transition: all 0.5s ease-in-out;
+        }
+
+        .controls-container.hidden {
+            max-height: 0;
+            padding-top: 0;
+            padding-bottom: 0;
+            margin-bottom: 0;
+            opacity: 0;
+            border-width: 0;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .control-group label {
+            font-size: 0.9rem;
+            color: var(--secondary-text-color);
+            font-weight: 500;
+        }
+
+        .control-group input, .control-group select {
+            background-color: var(--input-bg-color);
+            color: var(--primary-text-color);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 8px 10px;
+            font-family: inherit;
+        }
+
+        .control-group input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: var(--date-picker-filter);
+        }
+
+        .price-filter {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .control-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-left: auto;
+        }
+
+        .control-buttons button {
+            padding: 8px 20px;
+            font-family: inherit;
+            font-weight: 500;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        #apply-filters-btn {
+            background-color: var(--accent-color);
+            color: white;
+        }
+
+        #apply-filters-btn:hover {
+            background-color: #0056b3;
+        }
+
+        #reset-filters-btn {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        #reset-filters-btn:hover {
+            background-color: #5a6268;
+        }
+
+        .toggle-switch {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        [data-theme='dark'] .slider {
+            background-color: #444;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--accent-color);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+
+        /* ===== PURCHASE LIST ===== */
+        #purchase-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 1.8rem;
+        }
+
+        #placeholder-text {
+            color: var(--secondary-text-color);
+            grid-column: 1 / -1;
+            text-align: center;
+            font-size: 1.2rem;
+            padding: 2rem;
+        }
+
+        /* ===== GAME CARDS ===== */
+        .purchase-card {
+            background: var(--card-bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            box-shadow: var(--card-shadow);
+            transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+            padding: 0;
+        }
+
+        .purchase-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: var(--card-hover-shadow);
+            border-color: var(--accent-color);
+            z-index: 10;
+        }
+
+        .card-image-container {
+            width: 100%;
+            aspect-ratio: 460 / 215;
+            background-color: var(--input-bg-color);
+        }
+
+        .card-image-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .card-content {
+            padding: 1rem 1.5rem 1.5rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .card-header h2 {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 600;
+            line-height: 1.3;
+            min-height: 3.9rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .card-body {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+
+        .info-item .icon {
+            width: 20px;
+            height: 20px;
+            fill: var(--secondary-text-color);
+            flex-shrink: 0;
+        }
+
+        .info-item .label {
+            color: var(--secondary-text-color);
+            min-width: 110px;
+            font-size: 1rem;
+        }
+
+        .info-item .value {
+            color: var(--primary-text-color);
+            font-weight: 500;
+            word-break: break-all;
+            font-size: 1rem;
+        }
+
+        .info-item .value.discount {
+            color: var(--discount-color);
+        }
+
+        .copy-btn {
+            background: none;
+            border: none;
+            padding: 2px 5px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            transition: transform 0.2s ease-in-out;
+        }
+
+        .copy-btn:hover {
+            transform: scale(1.2);
+        }
+
+        .copy-btn svg {
+            width: 14px;
+            height: 14px;
+            fill: var(--accent-color);
+        }
+
+        .card-extra-details {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease-in-out, margin-top 0.4s ease-in-out, padding-top 0.4s ease-in-out;
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+            font-size: 0.95rem;
+        }
+
+        .purchase-card:hover .card-extra-details,
+        #purchase-list.show-all-details .purchase-card .card-extra-details {
+            max-height: 150px;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .card-extra-details .info-item .icon {
+            width: 18px;
+            height: 18px;
+        }
+
+        .card-extra-details .value {
+            font-family: monospace;
+            font-size: 1rem;
+            color: var(--secondary-text-color);
+        }
+
+        /* ===== STATS MODAL ===== */
+        #stats-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 1;
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        #stats-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        #stats-modal {
+            background: var(--card-bg-color);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            transform: scale(1);
+            transition: transform 0.3s ease-in-out;
+        }
+
+        #stats-overlay.hidden #stats-modal {
+            transform: scale(0.9);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 1.8rem;
+        }
+
+        #close-stats-btn {
+            background: none;
+            border: none;
+            font-size: 2.5rem;
+            color: var(--secondary-text-color);
+            cursor: pointer;
+            line-height: 1;
+            padding: 0;
+        }
+
+        #close-stats-btn:hover {
+            color: var(--primary-text-color);
+        }
+
+        #stats-content .stat-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 1rem 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 1.1rem;
+        }
+
+        #stats-content .stat-item:last-child {
+            border-bottom: none;
+        }
+
+        #stats-content .stat-label {
+            color: var(--secondary-text-color);
+        }
+
+        #stats-content .stat-value {
+            font-weight: 600;
+            color: var(--accent-color);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- File Upload Area -->
+        <div class="upload-area" id="upload-area">
+            <h2>📎 Epic Games Library Viewer</h2>
+            <p>Drag & drop your Epic Games export file (.txt) here</p>
+            <p>or</p>
+            <button class="upload-btn" onclick="document.getElementById('file-input').click()">Choose File</button>
+            <input type="file" id="file-input" class="file-input" accept=".txt" />
+        </div>
+
+        <!-- Main App (Hidden initially) -->
+        <div id="main-app" style="display: none;">
+            <header class="app-header">
+                <div class="header-left">
+                    <h1>My Purchase History</h1>
+                    <div class="search-wrapper">
+                        <input type="text" id="search-input" placeholder="Search displayed games...">
+                        <span id="search-counter"></span>
+                    </div>
+                </div>
+                <div class="app-header-actions">
+                    <button id="toggle-controls-btn">Hide Controls</button>
+                    <button id="show-stats-btn">📊 Show Statistics</button>
+                </div>
+            </header>
+
+            <div class="controls-container">
+                <div class="control-group">
+                    <label for="sort-select">🗂️ Sort By</label>
+                    <select id="sort-select">
+                        <option value="date-desc">Date (Newest First)</option>
+                        <option value="date-asc">Date (Oldest First)</option>
+                        <option value="price-desc">Price (High to Low)</option>
+                        <option value="price-asc">Price (Low to High)</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label>🗓️ Filter by Date</label>
+                    <div class="price-filter">
+                        <input type="date" id="date-from"><span>to</span><input type="date" id="date-to">
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label for="price-filter-type">💰 Filter by Final Price</label>
+                    <div class="price-filter">
+                        <select id="price-filter-type">
+                            <option value="above">Above</option>
+                            <option value="below">Below</option>
+                        </select>
+                        <input type="number" id="price-value" placeholder="e.g., 50">
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label>Options</label>
+                    <div class="toggle-switch">
+                        <label class="switch"><input type="checkbox" id="show-all-toggle"><span class="slider"></span></label>
+                        <span>Always show details</span>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label for="theme-select">Theme</label>
+                    <select id="theme-select">
+                        <option value="system">System Default</option>
+                        <option value="light">Light</option>
+                        <option value="dark">Dark</option>
+                    </select>
+                </div>
+                <div class="control-buttons">
+                    <button id="reset-filters-btn">Reset</button>
+                    <button id="apply-filters-btn">Apply</button>
+                </div>
+            </div>
+
+            <main id="purchase-list">
+                <p id="placeholder-text">Load your Epic Games export file above to see your library!</p>
+            </main>
+        </div>
+
+        <!-- Stats Modal -->
+        <div id="stats-overlay" class="hidden">
+            <div id="stats-modal">
+                <div class="modal-header">
+                    <h2>Statistics Summary</h2>
+                    <button id="close-stats-btn" title="Close">&times;</button>
+                </div>
+                <div id="stats-content"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // קוד JavaScript נוכחי + עדכונים לטיפול בקובץ
+        (function() {
+            const storedTheme = localStorage.getItem('theme');
+            if (storedTheme) {
+                document.documentElement.setAttribute('data-theme', storedTheme);
+            }
+        })();
+
+        // --- State & DOM Elements ---
+        let allGamesData = [];
+
+        const uploadArea = document.getElementById('upload-area');
+        const fileInput = document.getElementById('file-input');
+        const mainApp = document.getElementById('main-app');
+        const purchaseList = document.getElementById('purchase-list');
+        const searchInput = document.getElementById('search-input');
+        const applyBtn = document.getElementById('apply-filters-btn');
+        const resetBtn = document.getElementById('reset-filters-btn');
+        const showAllToggle = document.getElementById('show-all-toggle');
+        const toggleControlsBtn = document.getElementById('toggle-controls-btn');
+        const controlsContainer = document.querySelector('.controls-container');
+        const themeSelect = document.getElementById('theme-select');
+        const showStatsBtn = document.getElementById('show-stats-btn');
+        const statsOverlay = document.getElementById('stats-overlay');
+        const closeStatsBtn = document.getElementById('close-stats-btn');
+        const statsContent = document.getElementById('stats-content');
+        const searchCounter = document.getElementById('search-counter');
+
+        // --- SVG Icons ---
+        const icons = {
+            calendar: `<svg class="icon" viewBox="0 0 24 24"><path d="M19,4H18V2H16V4H8V2H6V4H5A2,2 0 0,0 3,6V20A2,2 0 0,0 5,22H19A2,2 0 0,0 21,20V6A2,2 0 0,0 19,4M19,20H5V10H19V20M19,8H5V6H19V8M7,12H12V17H7V12Z" /></svg>`,
+            priceTag: `<svg class="icon" viewBox="0 0 24 24"><path d="M5,5H15V3H5A2,2 0 0,0 3,5V15H5V5M21,9A2,2 0 0,0 19,7H9A2,2 0 0,0 7,9V19A2,2 0 0,0 9,21H19A2,2 0 0,0 21,19V9M19,19H9V9H19V19M15,13H13V15H15V13M17,11H13V9H17V11Z" /></svg>`,
+            receipt: `<svg class="icon" viewBox="0 0 24 24"><path d="M5,3H19A2,2 0 0,1 21,5V19A2,2 0 0,1 19,21H5A2,2 0 0,1 3,19V5A2,2 0 0,1 5,3M15,7H9V9H15V7M15,11H9V13H15V11M15,15H9V17H15V15Z" /></svg>`,
+            quantity: `<svg class="icon" viewBox="0 0 24 24"><path d="M7,15H9.5V12.5H12.5V15H15V12.5H12.5V9.5H15V7H12.5V9.5H9.5V7H7V9.5H9.5V12.5H7V15M19,3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5A2,2 0 0,0 19,3Z" /></svg>`,
+            payment: `<svg class="icon" viewBox="0 0 24 24"><path d="M20,4H4A2,2 0 0,0 2,6V18A2,2 0 0,0 4,20H20A2,2 0 0,0 22,18V6A2,2 0 0,0 20,4M20,18H4V12H20V18M20,8H4V6H20V8Z" /></svg>`,
+            copy: `<svg viewBox="0 0 24 24"><path d="M19,21H8V7H19M19,5H8A2,2 0 0,0 6,7V21A2,2 0 0,0 8,23H19A2,2 0 0,0 21,21V7A2,2 0 0,0 19,5M16,1H4A2,2 0 0,0 2,3V17H4V3H16V1Z" /></svg>`
+        };
+
+        // --- File Upload Handling ---
+        function initializeFileUpload() {
+            // Drag and drop
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.classList.add('dragover');
+            });
+
+            uploadArea.addEventListener('dragleave', () => {
+                uploadArea.classList.remove('dragover');
+            });
+
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    handleFile(files[0]);
+                }
+            });
+
+            // File input
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    handleFile(e.target.files[0]);
+                }
+            });
+        }
+
+        function handleFile(file) {
+            if (!file.name.toLowerCase().endsWith('.txt')) {
+                alert('Please select a valid .txt file exported from Epic Games.');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const content = e.target.result;
+                parseTextFile(content);
+            };
+            reader.readAsText(file);
+        }
+
+        function parseTextFile(content) {
+            const lines = content.split('\n').filter(line => line.trim());
+            const parsedGames = [];
+
+            for (const line of lines) {
+                const game = parseGameLine(line);
+                if (game) {
+                    parsedGames.push(game);
+                }
+            }
+
+            if (parsedGames.length === 0) {
+                alert('No valid game data found in the file. Please check the file format.');
+                return;
+            }
+
+            allGamesData = parsedGames;
+            uploadArea.style.display = 'none';
+            mainApp.style.display = 'block';
+            runDisplayLogic();
+        }
+
+        function parseGameLine(line) {
+            // מנתח שורה בפורמט: Game: [name], Date: [date], Original Price: [price], etc.
+            const parts = line.split(', ');
+            const game = {};
+
+            for (const part of parts) {
+                const [key, ...valueParts] = part.split(': ');
+                const value = valueParts.join(': ').trim();
+
+                switch (key.trim()) {
+                    case 'Game':
+                        game.name = value;
+                        break;
+                    case 'Date':
+                        game.date = value;
+                        game.dateObj = parseDate(value);
+                        break;
+                    case 'Original Price':
+                        game.originalPrice = value;
+                        break;
+                    case 'Discount':
+                        game.discount = value;
+                        break;
+                    case 'Total Paid':
+                        game.totalPaid = value;
+                        game.finalPriceNum = parsePrice(value);
+                        break;
+                    case 'Order ID':
+                        game.orderId = value;
+                        break;
+                    case 'Quantity':
+                        game.quantity = parseInt(value) || 1;
+                        break;
+                    case 'Payment Method':
+                        game.paymentMethod = value;
+                        break;
+                    case 'Tax':
+                        game.tax = value;
+                        break;
+                }
+            }
+
+            return game.name ? game : null;
+        }
+
+        function parseDate(dateStr) {
+            // מנתח תאריך בפורמט DD/MM/YYYY
+            const parts = dateStr.split('/');
+            if (parts.length === 3) {
+                return new Date(parts[2], parts[1] - 1, parts[0]);
+            }
+            return new Date();
+        }
+
+        function parsePrice(priceStr) {
+            if (!priceStr) return 0;
+            const match = priceStr.match(/[\d,.]+/);
+            return match ? parseFloat(match[0].replace(/,/g, '')) : 0;
+        }
+
+        // --- Image fetching functions ---
+        function sanitizeGameName(name) {
+            let cleanedName = name;
+            cleanedName = cleanedName.replace(/™|®/g, '');
+            cleanedName = cleanedName.split(/[:—]|\s--\s/)[0];
+            
+            const tagsToRemove = [
+                'Standard Edition', 'Deluxe Edition', 'Premium Edition', 'Gold Edition',
+                'Complete Edition', 'Ultimate Edition', 'GOTY Edition', 'Game of the Year Edition',
+                'Versus Edition', 'Anniversary', 'Party Favor', 'Mod Kit', 'Development Toolkit',
+                'Editor', 'Trial Week', 'Free Demo', 'Alpha 2'
+            ];
+            
+            const regex = new RegExp(`\\b(${tagsToRemove.join('|')})\\b`, 'gi');
+            cleanedName = cleanedName.replace(regex, '');
+            cleanedName = cleanedName.replace(/\s\s+/g, ' ').trim();
+            
+            return cleanedName;
+        }
+
+        async function fetchGameImageUrl(gameName) {
+            const proxyUrl = 'https://cors.eu.org/';
+            
+            const trySearch = async (term) => {
+                if (!term) return null;
+                
+                const searchUrl = `https://store.steampowered.com/api/storesearch/?term=${encodeURIComponent(term)}&l=english&cc=US`;
+                try {
+                    const response = await fetch(proxyUrl + searchUrl);
+                    if (!response.ok) return null;
+                    const data = await response.json();
+
+                    if (data && data.items && data.items.length > 0) {
+                        const gameId = data.items[0].id;
+                        if (gameId) {
+                            console.log(`[SUCCESS] Found match for "${gameName}" with search term: "${term}"`);
+                            return `https://cdn.akamai.steamstatic.com/steam/apps/${gameId}/header.jpg`;
+                        }
+                    }
+                    return null;
+                } catch (error) {
+                    console.error(`Error fetching image URL for term "${term}":`, error);
+                    return null;
+                }
+            };
+
+            // Try original name first
+            let imageUrl = await trySearch(gameName);
+            if (imageUrl) return imageUrl;
+
+            // Try sanitized name
+            const sanitizedName = sanitizeGameName(gameName);
+            if (sanitizedName.toLowerCase() !== gameName.toLowerCase()) {
+                imageUrl = await trySearch(sanitizedName);
+                if (imageUrl) return imageUrl;
+            }
+
+            console.warn(`[FAIL] Could not find any match for "${gameName}" after all attempts.`);
+            return null;
+        }
+
+        // --- Display Logic ---
+        async function runDisplayLogic() {
+            let filteredData = [...allGamesData];
+
+            // Filtering logic
+            const dateFrom = document.getElementById('date-from').value;
+            const dateTo = document.getElementById('date-to').value;
+            const priceFilterType = document.getElementById('price-filter-type').value;
+            const priceValue = parseFloat(document.getElementById('price-value').value);
+
+            if (dateFrom) {
+                filteredData = filteredData.filter(g => g.dateObj >= new Date(dateFrom));
+            }
+            if (dateTo) {
+                filteredData = filteredData.filter(g => g.dateObj <= new Date(dateTo));
+            }
+            if (!isNaN(priceValue)) {
+                if (priceFilterType === 'above') {
+                    filteredData = filteredData.filter(g => g.finalPriceNum > priceValue);
+                } else if (priceFilterType === 'below') {
+                    filteredData = filteredData.filter(g => g.finalPriceNum < priceValue);
+                }
+            }
+
+            // Fetch images
+            purchaseList.innerHTML = '<p id="placeholder-text">Searching for game images...</p>';
+            const fetchPromises = filteredData.map(game => 
+                fetchGameImageUrl(game.name).then(url => {
+                    game.imageUrl = url;
+                    return game;
+                })
+            );
+            const gamesWithImages = await Promise.all(fetchPromises);
+
+            // Sorting
+            const sortValue = document.getElementById('sort-select').value;
+            switch (sortValue) {
+                case 'date-desc':
+                    gamesWithImages.sort((a, b) => b.dateObj - a.dateObj);
+                    break;
+                case 'date-asc':
+                    gamesWithImages.sort((a, b) => a.dateObj - b.dateObj);
+                    break;
+                case 'price-desc':
+                    gamesWithImages.sort((a, b) => b.finalPriceNum - a.finalPriceNum);
+                    break;
+                case 'price-asc':
+                    gamesWithImages.sort((a, b) => a.finalPriceNum - b.finalPriceNum);
+                    break;
+            }
+
+            displayCards(gamesWithImages);
+            handleLiveSearch();
+        }
+
+        function displayCards(games) {
+            purchaseList.innerHTML = '';
+            if (games.length === 0) {
+                purchaseList.innerHTML = '<p id="placeholder-text">No items match your criteria.</p>';
+                return;
+            }
+            games.forEach(game => purchaseList.appendChild(createGameCard(game)));
+            
+            if (showAllToggle.checked) {
+                purchaseList.classList.add('show-all-details');
+            } else {
+                purchaseList.classList.remove('show-all-details');
+            }
+        }
+
+        function createGameCard(game) {
+            const card = document.createElement('div');
+            card.className = 'purchase-card';
+
+            const imageHTML = `
+                <div class="card-image-container">
+                    <img src="${game.imageUrl || ''}" 
+                         alt="${game.name}" 
+                         onerror="this.onerror=null; this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDYwIiBoZWlnaHQ9IjIxNSIgdmlld0JveD0iMCAwIDQ2MCAyMTUiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI0NjAiIGhlaWdodD0iMjE1IiBmaWxsPSIjRjBGMEYwIi8+CjxwYXRoIGQ9Ik0yMzAgMTA3LjVMMjQ1IDE5Mkgy4zUiIHN0cm9rZT0iIzk5OTk5OSIgc3Ryb2tlLXdpZHRoPSIzIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KPHRleHQgeD0iMjMwIiB5PSIxMDAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OTk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+SW1hZ2UgTm90IEZvdW5kPC90ZXh0Pgo8L3N2Zz4K';">
+                </div>`;
+
+            const copyBtnHTML = `<button class="copy-btn" title="Copy">${icons.copy}</button>`;
+
+            card.innerHTML = `
+                ${imageHTML} 
+                <div class="card-content">
+                    <div class="card-header"><h2>${game.name || 'N/A'}</h2></div>
+                    <div class="card-body">
+                        <div class="info-item">${icons.calendar}<span class="label">Date:</span><span class="value">${game.date || 'N/A'}</span>${copyBtnHTML}</div>
+                        <div class="info-item">${icons.priceTag}<span class="label">Original Price:</span><span class="value">${game.originalPrice || 'N/A'}</span>${copyBtnHTML}</div>
+                        ${game.discount && !game.discount.includes('0.00') ? `<div class="info-item">${icons.priceTag}<span class="label">Discount:</span><span class="value discount">${game.discount}</span>${copyBtnHTML}</div>` : ''}
+                        <div class="info-item" style="font-weight:600;"><span class="label">Final Price:</span><span class="value">${game.totalPaid || 'N/A'}</span>${copyBtnHTML}</div>
+                    </div>
+                    <div class="card-extra-details">
+                        ${game.orderId && game.orderId !== 'N/A' ? `<div class="info-item">${icons.receipt}<span class="label">Order ID:</span><span class="value">${game.orderId}</span>${copyBtnHTML}</div>` : ''}
+                        ${game.quantity ? `<div class="info-item">${icons.quantity}<span class="label">Quantity:</span><span class="value">${game.quantity}</span>${copyBtnHTML}</div>` : ''}
+                        ${game.paymentMethod && game.paymentMethod !== 'N/A' ? `<div class="info-item">${icons.payment}<span class="label">Payment Method:</span><span class="value">${game.paymentMethod}</span>${copyBtnHTML}</div>` : ''}
+                    </div>
+                </div>`;
+
+            const extraDetails = card.querySelector('.card-extra-details');
+            if (extraDetails && !extraDetails.innerText.trim()) extraDetails.remove();
+            return card;
+        }
+
+        // --- Event Handlers ---
+        function handleLiveSearch() {
+            const searchTerm = searchInput.value.toLowerCase().trim();
+            const cards = document.querySelectorAll('.purchase-card');
+            let visibleCount = 0;
+
+            cards.forEach(card => {
+                const titleElement = card.querySelector('.card-header h2');
+                if (titleElement) {
+                    const title = titleElement.textContent.toLowerCase();
+                    if (title.includes(searchTerm)) {
+                        card.style.display = 'flex';
+                        visibleCount++;
+                    } else {
+                        card.style.display = 'none';
+                    }
+                }
+            });
+
+            if (searchTerm) {
+                searchCounter.textContent = `${visibleCount} results`;
+            } else {
+                searchCounter.textContent = '';
+            }
+        }
+
+        function handleCardClick(event) {
+            const copyBtn = event.target.closest('.copy-btn');
+            if (!copyBtn) return;
+            const valueToCopy = copyBtn.previousElementSibling.innerText;
+            navigator.clipboard.writeText(valueToCopy).then(() => {
+                copyBtn.title = 'Copied!';
+                setTimeout(() => { copyBtn.title = 'Copy'; }, 2000);
+            }).catch(err => console.error('Failed to copy: ', err));
+        }
+
+        function toggleControlsVisibility() {
+            controlsContainer.classList.toggle('hidden');
+            const isHidden = controlsContainer.classList.contains('hidden');
+            toggleControlsBtn.textContent = isHidden ? 'Show Controls' : 'Hide Controls';
+        }
+
+        function handleThemeChange(event) {
+            const newTheme = event.target.value;
+            if (newTheme === 'system') {
+                document.documentElement.removeAttribute('data-theme');
+                localStorage.removeItem('theme');
+            } else {
+                document.documentElement.setAttribute('data-theme', newTheme);
+                localStorage.setItem('theme', newTheme);
+            }
+        }
+
+        function resetAll() {
+            document.getElementById('sort-select').value = 'date-desc';
+            document.getElementById('date-from').value = '';
+            document.getElementById('date-to').value = '';
+            document.getElementById('price-filter-type').value = 'above';
+            document.getElementById('price-value').value = '';
+            searchInput.value = '';
+            runDisplayLogic();
+        }
+
+        function calculateAndShowStats() {
+            if (allGamesData.length === 0) {
+                statsContent.innerHTML = '<p>No data to display.</p>';
+                statsOverlay.classList.remove('hidden');
+                return;
+            }
+
+            const totalGames = allGamesData.length;
+            let totalSpent = 0;
+            let totalOriginalValue = 0;
+            const yearCounts = {};
+            
+            allGamesData.forEach(game => {
+                const finalPrice = parsePrice(game.totalPaid);
+                const originalPrice = parsePrice(game.originalPrice);
+                
+                totalSpent += finalPrice;
+                if (originalPrice > 0 || finalPrice > 0) {
+                    totalOriginalValue += originalPrice > finalPrice ? originalPrice : finalPrice;
+                }
+
+                const year = game.dateObj.getFullYear();
+                yearCounts[year] = (yearCounts[year] || 0) + 1;
+            });
+
+            const totalSaved = totalOriginalValue - totalSpent;
+
+            const years = Object.keys(yearCounts);
+            let mostGamesYear = "N/A", leastGamesYear = "N/A";
+            if (years.length > 0) {
+                mostGamesYear = years[0];
+                leastGamesYear = years[0];
+                years.forEach(year => {
+                    if (yearCounts[year] > yearCounts[mostGamesYear]) mostGamesYear = year;
+                    if (yearCounts[year] < yearCounts[leastGamesYear]) leastGamesYear = year;
+                });
+            }
+            
+            const freeGames = allGamesData.filter(g => parsePrice(g.totalPaid) === 0).length;
+            const paidGamesCount = totalGames - freeGames;
+            const avgCost = paidGamesCount > 0 ? totalSpent / paidGamesCount : 0;
+
+            statsContent.innerHTML = `
+                <div class="stat-item">
+                    <span class="stat-label">Total Games Acquired</span>
+                    <span class="stat-value">${totalGames}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Total Amount Spent</span>
+                    <span class="stat-value">₪${totalSpent.toFixed(2)}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Total Saved with Discounts</span>
+                    <span class="stat-value">₪${totalSaved.toFixed(2)}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Total Value of Library</span>
+                    <span class="stat-value">₪${totalOriginalValue.toFixed(2)}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Free Games Claimed</span>
+                    <span class="stat-value">${freeGames}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Average Cost (Paid Games)</span>
+                    <span class="stat-value">₪${avgCost.toFixed(2)}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Busiest Year (Most Games)</span>
+                    <span class="stat-value">${mostGamesYear !== "N/A" ? `${mostGamesYear} (${yearCounts[mostGamesYear]} games)` : 'N/A'}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Quietest Year (Least Games)</span>
+                    <span class="stat-value">${leastGamesYear !== "N/A" ? `${leastGamesYear} (${yearCounts[leastGamesYear]} games)` : 'N/A'}</span>
+                </div>
+            `;
+
+            statsOverlay.classList.remove('hidden');
+        }
+
+        function hideStatsModal() {
+            statsOverlay.classList.add('hidden');
+        }
+
+        // --- Initialize App ---
+        function initialize() {
+            initializeFileUpload();
+            
+            searchInput.addEventListener('input', handleLiveSearch);
+            applyBtn.addEventListener('click', runDisplayLogic);
+            resetBtn.addEventListener('click', resetAll);
+            showAllToggle.addEventListener('change', (e) => {
+                purchaseList.classList.toggle('show-all-details', e.target.checked);
+            });
+            toggleControlsBtn.addEventListener('click', toggleControlsVisibility);
+            themeSelect.addEventListener('change', handleThemeChange);
+            purchaseList.addEventListener('click', handleCardClick);
+            showStatsBtn.addEventListener('click', calculateAndShowStats);
+            closeStatsBtn.addEventListener('click', hideStatsModal);
+            statsOverlay.addEventListener('click', (e) => {
+                if (e.target === statsOverlay) {
+                    hideStatsModal();
+                }
+            });
+
+            const currentTheme = localStorage.getItem('theme') || 'system';
+            themeSelect.value = currentTheme;
+            if (showAllToggle.checked) {
+                purchaseList.classList.add('show-all-details');
+            }
+        }
+
+        // Start the app
+        initialize();
+    </script>
+</body>
+</html>
