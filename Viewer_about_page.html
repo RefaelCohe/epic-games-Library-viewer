@@ -86,6 +86,24 @@
             transition: all 0.3s ease; /* אותו אפקט מעבר חלק כמו ב-contact-links */
         }
 
+        .project-link-middle:hover {
+            background: var(--primary-color); /* אותו צבע רקע כמו ב-contact-links */
+            color: white; /* טקסט לבן בעת hover */
+        }
+
+        .project-link-middle {
+            display: inline-block;
+            background: rgb(205, 205, 205);
+            color: white;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-top: 1rem;
+            text-decoration: none; /* מסיר את הקו התחתון */
+            transition: all 0.3s ease; /* אותו אפקט מעבר חלק כמו ב-contact-links */
+        }
+
         .project-link:hover {
             background: var(--primary-color); /* אותו צבע רקע כמו ב-contact-links */
             color: white; /* טקסט לבן בעת hover */
@@ -323,7 +341,7 @@
                 <div style="text-align: left;">
                     <strong>Q: How do I export my library data?</strong>
                     <p>Use our Chrome extension to easily export your Epic Games library data, then upload it to the viewer.</p>
-                    <a href="Chrome.com/store/link" class="project-link" target="_blank" style="margin-bottom: 1.5rem; display: inline-block;">📥 Get Library Exporter Extension</a>
+                    <a href="Chrome.com/store/link" class="project-link-middle" target="_blank" style="margin-bottom: 1.5rem; display: inline-block;">📥 Get Library Exporter Extension</a>
                     </div>
 
                     <strong>Q: Is my data safe?</strong>
