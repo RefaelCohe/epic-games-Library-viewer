@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Epic Games Library Viewer</title>
+    
+    <!-- Favicon - multiple sizes for different devices -->
+    <link rel="icon" type="image/x-icon" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iOCIgZmlsbD0iIzAwN2JmZiIvPgo8cGF0aCBkPSJNOCAxMGg0djJIOHYtMnptMCA0aDEydjJIOHYtMnptMCA0aDh2Mkg4di0yeiIgZmlsbD0id2hpdGUiLz4KPHN2ZyB4PSIyMCIgeT0iOCIgd2lkdGg9IjgiIGhlaWdodD0iOCIgdmlld0JveD0iMCAwIDggOCIgZmlsbD0ibm9uZSI+CjxjaXJjbGUgY3g9IjQiIGN5PSI0IiByPSIzIiBmaWxsPSIjZmZmIi8+CjxjaXJjbGUgY3g9IjQiIGN5PSI0IiByPSIxLjUiIGZpbGw9IiMwMDdiZmYiLz4KPC9zdmc+Cjwvc3ZnPgo=">
+    <link rel="apple-touch-icon" sizes="180x180" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgwIiBoZWlnaHQ9IjE4MCIgdmlld0JveD0iMCAwIDE4MCAxODAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxODAiIGhlaWdodD0iMTgwIiByeD0iNDAiIGZpbGw9IiMwMDdiZmYiLz4KPHN2ZyB4PSI0NSIgeT0iNTYuMjUiIHdpZHRoPSI5MCIgaGVpZ2h0PSI2Ny41IiB2aWV3Qm94PSIwIDAgOTAgNjcuNSIgZmlsbD0ibm9uZSI+CjxwYXRoIGQ9Ik0wIDBoMjIuNXYxMS4yNUgwVjB6bTAgMjIuNWg2N3Y5SDBoLTl6bTAgMjIuNWg0NXY5SDBWNDV6IiBmaWxsPSJ3aGl0ZSIvPgo8L3N2Zz4KPHN2ZyB4PSIxMTIuNSIgeT0iNDUiIHdpZHRoPSI0NSIgaGVpZ2h0PSI0NSIgdmlld0JveD0iMCAwIDQ1IDQ1IiBmaWxsPSJub25lIj4KPGNpcmNsZSBjeD0iMjIuNSIgY3k9IjIyLjUiIHI9IjE2Ljg3NSIgZmlsbD0iI2ZmZiIvPgo8Y2lyY2xlIGN4PSIyMi41IiBjeT0iMjIuNSIgcj0iOC40MzgiIGZpbGw9IiMwMDdiZmYiLz4KPC9zdmc+Cjwvc3ZnPgo=">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap');
         
@@ -144,12 +148,14 @@
         .search-wrapper {
             position: relative;
             min-width: 300px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
         #search-input {
-            width: 100%;
+            flex: 1;
             padding: 10px 15px;
-            padding-right: 80px;
             border-radius: 8px;
             border: 1px solid var(--border-color);
             background-color: var(--input-bg-color);
@@ -159,18 +165,92 @@
         }
 
         #search-counter {
-            position: absolute;
-            right: 15px;
-            top: 50%;
-            transform: translateY(-50%);
+            background-color: var(--input-bg-color);
             color: var(--secondary-text-color);
-            font-size: 0.9rem;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            white-space: nowrap;
+            min-width: 60px;
+            text-align: center;
+            border: 1px solid var(--border-color);
+            display: none; /* Hidden by default */
         }
 
         .app-header-actions {
             display: flex;
-            gap: 1rem;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            margin-top: 1rem;
         }
+
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            flex: 0 0 auto;
+        }
+
+        .help-buttons {
+            display: flex;
+            gap: 1rem;
+            flex: 0 0 auto;
+        }
+
+        /* Responsive behavior for smaller screens */
+        @media (max-width: 768px) {
+            .app-header-actions {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: stretch;
+            }
+            
+            .action-buttons,
+            .help-buttons {
+                justify-content: center;
+            }
+        }
+
+        .help-btn-small {
+            background-color: #6c757d;
+            color: white;
+            font-size: 1rem;
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: background-color 0.3s ease;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        .help-btn-small:hover {
+            background-color: #5a6268;
+        }
+
+        .help-btn-small.secondary {
+            background-color: #007bff;
+        }
+
+        .help-btn-small.secondary:hover {
+            background-color: #0056b3;
+        }
+
+        .help-btn-small.tertiary {
+            background-color: #28a745;
+        }
+
+        .help-btn-small.tertiary:hover {
+            background-color: #218838;
+        }
+
+        /* ===== End Help Buttons Styles ===== */
 
         .file-upload-label, #toggle-controls-btn, #show-stats-btn {
             display: inline-block;
@@ -610,8 +690,18 @@
                     </div>
                 </div>
                 <div class="app-header-actions">
-                    <button id="toggle-controls-btn">Hide Controls</button>
-                    <button id="show-stats-btn">📊 Show Statistics</button>
+                    <!-- Action buttons - Left side -->
+                    <div class="action-buttons">
+                        <button id="toggle-controls-btn">⚙️ Hide Controls</button>
+                        <button id="show-stats-btn">📊 Show Statistics</button>
+                    </div>
+                    
+                    <!-- Help/Info buttons - Right side -->
+                    <div class="help-buttons">
+                        <button class="help-btn-small tertiary" onclick="openAbout()">ℹ️ About</button>
+                        <button class="help-btn-small secondary" onclick="openExtension()">🧩 Extension</button>
+                        <button class="help-btn-small" onclick="openUserGuide()">📖 User Guide</button>
+                    </div>
                 </div>
             </header>
 
@@ -619,8 +709,8 @@
                 <div class="control-group">
                     <label for="sort-select">🗂️ Sort By</label>
                     <select id="sort-select">
-                        <option value="date-desc">Date (Newest First)</option>
                         <option value="date-asc">Date (Oldest First)</option>
+                        <option value="date-desc">Date (Newest First)</option>
                         <option value="price-desc">Price (High to Low)</option>
                         <option value="price-asc">Price (Low to High)</option>
                     </select>
@@ -649,7 +739,7 @@
                     </div>
                 </div>
                 <div class="control-group">
-                    <label for="theme-select">Theme</label>
+                    <label for="theme-select">🎨 Theme</label>
                     <select id="theme-select">
                         <option value="system">System Default</option>
                         <option value="light">Light</option>
@@ -981,8 +1071,8 @@
             const imageHTML = `
                 <div class="card-image-container">
                     <img src="${game.imageUrl || './images/placeholder.jpg'}" 
-                         alt="${game.name}" 
-                         onerror="this.onerror=null; this.src='./images/placeholder.jpg';">
+                        alt="${game.name}" 
+                        onerror="this.onerror=null; this.src='./images/placeholder.jpg';">
                 </div>`;
 
             const copyBtnHTML = `<button class="copy-btn" title="Copy">${icons.copy}</button>`;
@@ -1028,10 +1118,12 @@
                 }
             });
 
+            // Show/hide counter based on search activity
             if (searchTerm) {
                 searchCounter.textContent = `${visibleCount} results`;
+                searchCounter.style.display = 'block';
             } else {
-                searchCounter.textContent = '';
+                searchCounter.style.display = 'none';
             }
         }
 
@@ -1048,7 +1140,7 @@
         function toggleControlsVisibility() {
             controlsContainer.classList.toggle('hidden');
             const isHidden = controlsContainer.classList.contains('hidden');
-            toggleControlsBtn.textContent = isHidden ? 'Show Controls' : 'Hide Controls';
+            toggleControlsBtn.textContent = isHidden ? '⚙️ Show Controls' : '⚙️ Hide Controls';
         }
 
         function handleThemeChange(event) {
@@ -1063,7 +1155,7 @@
         }
 
         function resetAll() {
-            document.getElementById('sort-select').value = 'date-desc';
+            document.getElementById('sort-select').value = 'date-asc';
             document.getElementById('date-from').value = '';
             document.getElementById('date-to').value = '';
             document.getElementById('price-filter-type').value = 'above';
@@ -1154,6 +1246,20 @@
 
         function hideStatsModal() {
             statsOverlay.classList.add('hidden');
+        }
+
+        // --- Global helper functions for buttons ---
+        // השתמש בזה:
+        function openUserGuide() {
+            window.open('.user-guide.pdf', '_blank');
+        }
+
+        function openExtension() {
+            window.open('https://chrome.google.com/webstore/detail/epic-games-library-exporter/YOUR_EXTENSION_ID', '_blank');
+        }
+
+        function openAbout() {
+            window.open('https://refaelcohe.github.io/epic-games-exporter-about/', '_blank');
         }
 
         // --- Initialize App ---
