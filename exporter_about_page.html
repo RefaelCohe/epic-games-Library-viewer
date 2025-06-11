@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About - Epic Games Library Exporter</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><defs><linearGradient id='bg' x1='0%25' y1='0%25' x2='100%25' y2='100%25'><stop offset='0%25' style='stop-color:%23667eea'/><stop offset='100%25' style='stop-color:%23764ba2'/></linearGradient></defs><circle cx='16' cy='16' r='15' fill='url(%23bg)' stroke='%23fff' stroke-width='1'/><circle cx='16' cy='10' r='2.5' fill='%23fff'/><rect x='14' y='14' width='4' height='12' rx='2' fill='%23fff'/><circle cx='16' cy='28' r='1' fill='%23fff' opacity='0.7'/></svg>">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        
+        :root {
+            --primary-color: #007bff;
+            --secondary-color: #28a745;
+            --accent-color: #17a2b8;
+            --dark-color: #343a40;
+            --light-color: #f8f9fa;
+            --border-color: #dee2e6;
+            --text-color: #212529;
+            --text-muted: #6c757d;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .header {
+            text-align: center;
+            background: white;
+            border-radius: 20px;
+            padding: 3rem 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .header .subtitle {
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            font-weight: 300;
+        }
+
+        .version-badge {
+            display: inline-block;
+            background: var(--secondary-color);
+            color: white;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-top: 1rem;
+        }
+
+        .project-link {
+            display: inline-block;
+            background: rgb(38, 109, 167);
+            color: white;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-top: 1rem;
+            text-decoration: none; /* מסיר את הקו התחתון */
+            transition: all 0.3s ease; /* אותו אפקט מעבר חלק כמו ב-contact-links */
+        }
+
+        .project-link:hover {
+            background: var(--primary-color); /* אותו צבע רקע כמו ב-contact-links */
+            color: white; /* טקסט לבן בעת hover */
+        }
+
+        .content-grid {
+            display: grid;
+            gap: 2rem;
+            grid-template-columns: 1fr;
+        }
+
+        @media (min-width: 768px) {
+            .content-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+
+        .card-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .card h3 {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--dark-color);
+        }
+
+        .card p {
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        .developer-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: white;
+            font-weight: 600;
+            overflow: hidden;
+        }
+
+        .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+        }
+
+        .contact-links {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 1.5rem;
+        }
+
+        .contact-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.6rem 1.2rem;
+            background: var(--light-color);
+            color: var(--dark-color);
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .contact-link:hover {
+            background: var(--primary-color);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .features-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .features-list li {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            padding: 0.5rem 0;
+            color: var(--text-muted);
+        }
+
+        .features-list li::before {
+            content: "✅";
+            font-size: 1.1rem;
+        }
+
+        .credits-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .credits-list li {
+            background: var(--light-color);
+            margin: 0.5rem 0;
+            padding: 1rem;
+            border-radius: 8px;
+            border-left: 4px solid var(--accent-color);
+        }
+
+        .credits-list strong {
+            color: var(--dark-color);
+            display: block;
+            margin-bottom: 0.3rem;
+        }
+
+        .privacy-notice {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            text-align: center;
+            border-radius: 15px;
+            padding: 2rem;
+        }
+
+        .privacy-notice h3 {
+            color: white;
+            margin-bottom: 1rem;
+        }
+
+        .back-button {
+            position: fixed;
+            top: 2rem;
+            left: 2rem;
+            background: white;
+            color: var(--primary-color);
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 25px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .back-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 3rem;
+            padding: 2rem;
+            color: white;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <a href="javascript:history.back()" class="back-button">← Back</a>
+    
+    <div class="container">
+        <div class="header">
+            <h1>Epic Games Library Exporter Extension</h1>
+            <p class="subtitle">Export your Epic Games library</p>
+            <a href="Chrome.com/store/link" class="project-link" target="_blank">📥 Get Library Exporter Extension</a>
+            <a href="your-library-viewer-url.html" class="project-link">📚 Open Library Viewer</a>
+        </div>
+
+        <div class="content-grid">
+
+            <!-- Features -->
+            <div class="card">
+                <div class="card-icon">🚀</div>
+                <h3>Key Features</h3>
+                <ul class="features-list">
+                    <li>Chrome extension</li>
+                    <li>work on other brousers like Edge & Opera</li>
+                    <li>choose what data to export</li>
+                    <li>filter by date</li>
+                </ul>
+            </div>
+
+            <!-- Privacy -->
+            <div class="card">
+                <div class="card-icon">🔒</div>
+                <h3>Privacy & Security</h3>
+                <p><strong>Your data stays with you.</strong></p>
+                <ul class="features-list">
+                    <li>Processes data locally only</li>
+                    <li>Never sends data to external servers</li>
+                    <li>No tracking or analytics</li>
+                    <li>No personal information collection</li>
+                    <li>Open source & transparent</li>
+                </ul>
+            </div>
+
+            <div class="card full-width">
+                <div class="card-icon">👨‍💻</div>
+                <h3>About Me</h3>
+                <div class="developer-info">
+                    <div class="avatar">
+                        <img src="https://github.com/refaelcohe.png?size=80" alt="Refael Cohen">
+                    </div>
+                    <div>
+                        <strong>Refael Cohen</strong>
+                        <p style="margin: 0; color: var(--text-muted);">Vibe Coder & Tech Enthusiast</p>
+                    </div>
+                </div>
+                <p>Hi there, I'm Refael Cohen, a passionate technology enthusiast who creates small and useful applications. I'm a big fan of design, podcasts, and user interfaces.
+
+This extension was born out of necessity - I needed a way to view the list of games I've purchased over the years on the Epic Games Store. Unfortunately, they don't allow you to view this list online; you can only access it by downloading their launcher. (Well, not anymore...)</p>
+                
+                <div class="contact-links">
+                    <a href="https://Dialoger.app" class="contact-link" target="_blank">
+                        Dialoger.app
+                    </a>
+                    <a href="https://x.com/refaelcohe" class="contact-link" target="_blank">
+                        𝕏 (formerly Twitter)
+                    </a>
+                    </a>
+                    <a href="https://buymeacoffee.com/refael" class="contact-link" target="_blank">
+                        ☕ Buy Me a Coffee
+                    </a>
+                </div>
+            </div>
+
+            <!-- Credits -->
+            <div class="card full-width">
+                <div class="card-icon">🙏</div>
+                <h3>Credits & Acknowledgments</h3>
+                <ul class="credits-list">
+                    <li>
+                        <strong> Lalfam9132 <a href="https://www.reddit.com/user/lalfam9132/" target="_blank" style="color: var(--primary-color); text-decoration: none;">on Reddit</a> </strong>
+                    </li>
+                    <li>
+                        <strong>Claude Opus 4 & Gemini Pro 2.5</strong>
+                    </li>
+                    <li>
+                        <strong>Steam API</strong>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Legal -->
+            <div class="card full-width privacy-notice">
+                <div class="card-icon">📋</div>
+                <h3>Legal Notice</h3>
+                <p>This extension is an independent project and is not affiliated with, endorsed by, or sponsored by Epic Games. Epic Games and related trademarks are the property of Epic Games, Inc. This tool is provided "as is" for personal use only.</p>
+                <p>Users are solely responsible for their use of the tool</p>
+            </div>
+        </div>
+
+
+        <div class="footer">
+            <p>Made with ❤️ for the gaming community | © 2025 Refael Cohen</p>
+            <p>Last updated: June 2025 | Version 1.0</p>
+        </div>
+    </div>
+
+    <script>
+        // Add some subtle animations on scroll
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        // Observe all cards
+        document.querySelectorAll('.card').forEach(card => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(30px)';
+            card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+            observer.observe(card);
+        });
+
+        // Add click tracking for analytics (optional)
+        document.querySelectorAll('.contact-link').forEach(link => {
+            link.addEventListener('click', (e) => {
+                console.log('Contact link clicked:', e.target.textContent);
+            });
+        });
+    </script>
+</body>
+</html>
