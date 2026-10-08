@@ -18,7 +18,7 @@ if (root.EGLExportCore) return;
 const SCHEMA_VERSION = 2;
 const FILE_BASE_NAME = 'My_Epic_Games_Library';
 
-// Export fields, in file order. Same keys, labels and defaults as the extension popup.
+// Export fields, in file order. Used by the extension's export options and the Viewer's export dialog.
 const FIELDS = [
     { key: 'gameName', label: 'Game name', defaultOn: true },
     { key: 'purchaseDate', label: 'Purchase date', defaultOn: true },

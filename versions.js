@@ -13,6 +13,8 @@ window.EGL_VERSIONS = {
                 date: '2026-10-08',
                 notes: [
                     'Open your export straight in the Library Viewer, with no file to save or upload',
+                    'Export options open in a centered window on the Epic page, in the same look as the Library Viewer',
+                    'Clicking the extension on another site shows the way to your Epic account page',
                     'Live progress that follows Epic’s real pace, with time remaining',
                     'Clear in-page messages instead of browser pop-ups, with automatic retry when Epic is busy',
                     'Works again after Epic moved account pages to accounts.epicgames.com',
@@ -36,7 +38,8 @@ window.EGL_VERSIONS = {
                     'Receives your library directly from the extension',
                     'Export to JSON, CSV or TXT, in the same formats as the extension',
                     'Reads every export format (JSON, CSV and TXT, old and new)',
-                    'Cover art works again and loads only as you scroll',
+                    'Your library in pages of 48 games; covers load for the page you\u2019re on, and search results come first',
+                    'Cover art works again, from Steam or Wikipedia for games that aren\u2019t on Steam',
                     'New design with stats, filters and full order details',
                     'Your library stays loaded while you browse the site in the same tab'
                 ]
@@ -45,6 +48,6 @@ window.EGL_VERSIONS = {
     },
     privacy: {
         version: '2.0',
-        updated: '2026-10-08'
+        updated: '2026-10-09'
     }
 };

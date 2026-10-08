@@ -9,6 +9,7 @@ Publish it **before** releasing Exporter 1.3.0, because the extension's "Open in
 |---|---|
 | `index.html`, `styles.css`, `app.js` | The Library Viewer |
 | `egl-export-core.js` | Shared export formats. **Identical copy of the extension's file; keep them in sync** |
+| `egl-logger.js` | Console logger. **Identical copy of the extension's file; keep them in sync** |
 | `versions.js` | **Single source of truth for version numbers** shown on every page |
 | `exporter_about_page.html`, `Viewer_about_page.html`, `Privacy policy/Extension-privacy-policy.html` | Site pages (same URLs as before) |
 | `pages.css`, `pages.js` | Shared look and behavior of the site pages (theme, Back button, versions) |
@@ -24,11 +25,31 @@ Publish it **before** releasing Exporter 1.3.0, because the extension's "Open in
   or with "Close library" in the menu). The menu pages now open in the same tab.
 - **No Google Fonts.** The site uses the system font, which removes a third-party request.
 - The menu shows the Viewer version and links to the privacy policy.
+- **Pages of 48 games** with Previous / page numbers / Next at the bottom (like a search engine).
+  - The toolbar shows "49–96 of 594".
+  - Browser Back steps through pages, because the page is in the URL (`?page=3`).
+  - Changing the search, filters or sort goes back to page 1.
+- **Covers load by page:**
+  - The page you're on loads first, in grid order, and the next page is fetched in the background.
+  - Waiting lookups for pages you left are dropped, so a big library never loads all at once.
+  - **Search results' covers start immediately**, ahead of anything else.
+  - If Wikidata or Wikipedia answers "too many requests", lookups pause for 10s, 30s or 60s instead of failing.
+- **Wikipedia fallback for covers:** for games that aren't on Steam (e.g. Epic exclusives), the lead image of
+  the game's English Wikipedia article is used. It's accepted only when the article title matches the
+  game name exactly. Box art is portrait, so it's shown whole over a blurred copy that fills the frame.
+  The details panel links to the Wikipedia article.
+- Cover cache v2 (`egv.covers.v2`). Old entries are migrated once, and old misses are retried with the fallback.
+- **Console logging** (`egl-logger.js`, identical copy of the extension's):
+  - By default only warnings and errors are printed.
+  - Add `?debug` to the URL for everything: lookups with timings, parsing, import and export.
+  - `EGLLog.dump()` and `EGLLog.copy()` give the last 300 entries for bug reports.
+- Cover art: when Wikidata marks a game's only Steam ID as outdated (e.g. Disco Elysium, whose page became
+  "The Final Cut"), that ID is still used. Before, those games got no cover.
 
 ## Site pages
 - Rewritten in the Viewer's design (dark/light, responsive). They share the same theme setting.
 - **Back button**: if you came from another page (the library, the store, a search), it goes back. If the page
-  was opened directly (e.g. from the extension popup), it goes to the library.
+  was opened directly (e.g. from the extension), it goes to the library.
 - Fixed:
   - Duplicate `<head>`.
   - Placeholder links (`your-library-viewer-url.html`, `Chrome.com/store/link`).
@@ -46,10 +67,14 @@ Publish it **before** releasing Exporter 1.3.0, because the extension's "Open in
 ## Release checklist
 1. Update `versions.js`: version, date and `history` notes for the product you're releasing; `privacy` if the policy changed.
 2. Bump the extension's `manifest.json` to match.
-3. If `egl-export-core.js` changed in one place, copy it to the other.
+3. If `egl-export-core.js` or `egl-logger.js` changed in one place, copy it to the other.
 
-## Not updated
-`user-guide.pdf` and `Exporter-User-guide.pdf` still describe the old versions.
+## User guides (PDF)
+- `user-guide.pdf` is now the **Library Viewer** guide (8 pages, sample data). Before, it was an
+  unfinished copy of the extension guide.
+- `Exporter-User-guide.pdf` is **not replaced yet**. It's waiting for screenshots of the real Epic page;
+  a preview is in `../guides/out/exporter-preview.pdf`.
+- Sources and build steps are in `../guides/README.md`.
 
 ---
 

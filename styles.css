@@ -349,6 +349,34 @@ a { color: var(--accent); }
     opacity: 0; transition: opacity .3s ease;
 }
 .cover img.is-loaded { opacity: 1; }
+/* Wikipedia box art is portrait: shown whole (contain) over a blurred, darkened copy that fills the frame */
+.cover .cover-blur {
+    position: absolute; inset: -12px;
+    background-size: cover; background-position: center;
+    filter: blur(14px) brightness(.55) saturate(1.2);
+}
+.cover img.cover-contain { object-fit: contain; }
+
+/* ===== Pagination ===== */
+.pagination {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    margin: 28px 0 8px; flex-wrap: wrap;
+}
+.page-numbers { display: flex; align-items: center; gap: 4px; }
+.page-btn {
+    min-width: 38px; height: 38px; padding: 0 10px; border-radius: 9px;
+    display: inline-flex; align-items: center; justify-content: center; gap: 4px;
+    border: 1px solid transparent; background: transparent; color: var(--text-muted);
+    font-weight: 600; font-variant-numeric: tabular-nums; cursor: pointer;
+    transition: background-color .15s, color .15s, border-color .15s;
+}
+.page-btn:hover:not(:disabled) { background: var(--bg-elev); color: var(--text); }
+.page-btn[aria-current="page"] { background: var(--text); color: var(--bg); cursor: default; }
+.page-btn.page-step { border-color: var(--border); background: var(--bg-elev); color: var(--text); padding: 0 14px; }
+.page-btn.page-step:hover:not(:disabled) { background: var(--bg-hover); }
+.page-btn:disabled { opacity: .4; cursor: not-allowed; }
+.page-btn .icon { width: 18px; height: 18px; }
+.page-gap { min-width: 24px; text-align: center; color: var(--text-faint); }
 .card-body { padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
 .card-title {
     margin: 0; font-size: 14px; font-weight: 600; line-height: 1.35;
@@ -509,6 +537,9 @@ a { color: var(--accent); }
     #load-another-btn span, #export-btn span { display: none; }
     #load-another-btn, #export-btn { width: 36px; padding: 0; }
     .field-grid { grid-template-columns: 1fr; }
+    .page-step span { display: none; }
+    .page-btn { min-width: 34px; height: 36px; padding: 0 6px; }
+    .page-btn.page-step { padding: 0 8px; }
     .library { padding: 16px; }
     .stat-value { font-size: 18px; }
     .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }

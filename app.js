@@ -11,6 +11,17 @@
 
 const $ = (sel) => document.querySelector(sel);
 
+// Console logging (egl-logger.js). Warnings and errors only, unless the URL has ?debug.
+window.EGLLogger.configure({ app: 'Viewer', captureGlobalErrors: true });
+const log = {
+    app: window.EGLLogger.scope('app'),
+    parse: window.EGLLogger.scope('parse'),
+    covers: window.EGLLogger.scope('covers'),
+    import: window.EGLLogger.scope('import'),
+    storage: window.EGLLogger.scope('storage'),
+    export: window.EGLLogger.scope('export')
+};
+
 const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, ch => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
 })[ch]);
@@ -20,7 +31,13 @@ const storage = {
         try { return localStorage.getItem(key); } catch { return null; }
     },
     set(key, value) {
-        try { localStorage.setItem(key, value); } catch { /* storage unavailable or full */ }
+        try {
+            localStorage.setItem(key, value);
+            return true;
+        } catch (error) {
+            log.storage.warn(`Could not save "${key}" (storage full or blocked)`, error.message);
+            return false;
+        }
     },
     remove(key) {
         try { localStorage.removeItem(key); } catch { /* storage unavailable */ }
@@ -181,6 +198,7 @@ const rowsToOrders = (rows) => {
     const orders = [];
     const byId = new Map();
     let previous = null;
+    const unreadable = { dates: [], prices: [] };
 
     for (const row of rows) {
         const sourceName = cleanValue(row.gameName);
@@ -188,6 +206,9 @@ const rowsToOrders = (rows) => {
         const isContinuation = String(row.totalPrice ?? '').trim() === '-';
         const total = parseMoney(row.totalPrice);
         const price = parseMoney(row.originalPrice);
+        if (cleanValue(row.purchaseDate) && !parseDateValue(row.purchaseDate)) unreadable.dates.push(row.purchaseDate);
+        if (cleanValue(row.totalPrice) && !total) unreadable.prices.push(row.totalPrice);
+        if (cleanValue(row.originalPrice) && !price) unreadable.prices.push(row.originalPrice);
 
         let order = orderId ? byId.get(orderId) : null;
         if (!order && !orderId && isContinuation && previous) order = previous;
@@ -235,6 +256,8 @@ const rowsToOrders = (rows) => {
         });
         previous = order;
     }
+    if (unreadable.dates.length) log.parse.warn(`${unreadable.dates.length} dates couldn't be read`, { examples: unreadable.dates.slice(0, 3) });
+    if (unreadable.prices.length) log.parse.warn(`${unreadable.prices.length} prices couldn't be read`, { examples: unreadable.prices.slice(0, 3) });
     return orders;
 };
 
@@ -397,53 +420,107 @@ const sumByCurrency = (items, getAmount) => {
 };
 
 // =====================================================================
-// Cover images (Wikidata -> Steam app ID -> Steam CDN header)
+// Cover images
 // =====================================================================
+// 1. Wikidata: game name -> Steam app ID -> Steam CDN header image (wide, sharp)
+// 2. Fallback, Wikipedia: game name -> article lead image (box art), for games not on Steam
+// Every request goes straight from the browser to these public APIs (CORS-enabled, no keys).
+// Covers load page by page: the shown page first, the next page in the background, nothing else.
 
 const WIKIDATA_API = 'https://www.wikidata.org/w/api.php?format=json&formatversion=2&origin=*&';
+const WIKIPEDIA_API = 'https://en.wikipedia.org/w/api.php?format=json&formatversion=2&origin=*&';
 const STEAM_HEADER = (appId) => `https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/${appId}/header.jpg`;
-const IMAGE_CACHE_KEY = 'egv.steamIds.v1';
+const COVER_CACHE_KEY = 'egv.covers.v2';
+const LEGACY_CACHE_KEY = 'egv.steamIds.v1';
 const MISS_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 const MAX_CONCURRENT_LOOKUPS = 3;
 const LOOKUP_SPACING_MS = 150;
+const RATE_LIMIT_PAUSES_MS = [10000, 30000, 60000];
+const PRIORITY = { now: 0, prefetch: 2 };
 
-const imageCache = (() => {
+// A lookup result is { source: 'steam', id } | { source: 'wikipedia', url, title } | null (no cover)
+// A lookup dropped because its page is no longer shown resolves with DEFERRED.
+const DEFERRED = Object.freeze({ deferred: true });
+
+class RateLimitError extends Error {
+    constructor(service, status) {
+        super(`${service} is rate limiting (HTTP ${status})`);
+        this.status = status;
+    }
+}
+
+// Cache entries: [kind, value, extra, savedAt], kind 's' = Steam ID, 'w' = Wikipedia image URL
+// (extra = article title), null = no cover found (retried after MISS_TTL_MS).
+const coverCache = (() => {
     let data = {};
-    try { data = JSON.parse(storage.get(IMAGE_CACHE_KEY) || '{}') || {}; } catch { data = {}; }
+    try { data = JSON.parse(storage.get(COVER_CACHE_KEY) || '{}') || {}; } catch { data = {}; }
+
+    // One-time migration from v1 (name -> [steamId | null, savedAt]). Old misses are dropped,
+    // so those games get a chance with the new Wikipedia fallback.
+    const legacy = storage.get(LEGACY_CACHE_KEY);
+    if (legacy) {
+        try {
+            let migrated = 0;
+            for (const [key, [appId, savedAt]] of Object.entries(JSON.parse(legacy) || {})) {
+                if (appId && !data[key]) { data[key] = ['s', appId, null, savedAt]; migrated++; }
+            }
+            storage.set(COVER_CACHE_KEY, JSON.stringify(data));
+            log.covers.info('Migrated cover cache v1 → v2', { migrated });
+        } catch (error) {
+            log.covers.warn('Could not migrate the old cover cache', error);
+        }
+        storage.remove(LEGACY_CACHE_KEY);
+    }
+
     let saveTimer = null;
+    const save = () => {
+        clearTimeout(saveTimer);
+        saveTimer = setTimeout(() => storage.set(COVER_CACHE_KEY, JSON.stringify(data)), 500);
+    };
     return {
+        // Returns a result, null (known miss) or undefined (unknown / expired)
         get(key) {
             const entry = data[key];
             if (!entry) return undefined;
-            const [appId, savedAt] = entry;
-            if (appId === null && Date.now() - savedAt > MISS_TTL_MS) return undefined;
-            return appId;
+            const [kind, value, extra, savedAt] = entry;
+            if (kind === 's') return { source: 'steam', id: value };
+            if (kind === 'w') return { source: 'wikipedia', url: value, title: extra };
+            return Date.now() - savedAt > MISS_TTL_MS ? undefined : null;
         },
-        set(key, appId) {
-            data[key] = [appId, Date.now()];
-            clearTimeout(saveTimer);
-            saveTimer = setTimeout(() => storage.set(IMAGE_CACHE_KEY, JSON.stringify(data)), 500);
+        set(key, result) {
+            if (!result) data[key] = [null, null, null, Date.now()];
+            else if (result.source === 'steam') data[key] = ['s', result.id, null, Date.now()];
+            else data[key] = ['w', result.url, result.title, Date.now()];
+            save();
         }
     };
 })();
 
-// Keep the original sanitizer: strips edition tags and subtitles for a second lookup attempt
-const sanitizeGameName = (name) => {
-    let cleaned = name.replace(/™|®/g, '');
-    cleaned = cleaned.split(/[:—]|\s--\s/)[0];
-    const tagsToRemove = [
-        'Standard Edition', 'Deluxe Edition', 'Premium Edition', 'Gold Edition',
-        'Complete Edition', 'Ultimate Edition', 'GOTY Edition', 'Game of the Year Edition',
-        'Versus Edition', 'Anniversary', 'Party Favor', 'Mod Kit', 'Development Toolkit',
-        'Editor', 'Trial Week', 'Free Demo', 'Alpha 2'
-    ];
-    cleaned = cleaned.replace(new RegExp(`\\b(${tagsToRemove.join('|')})\\b`, 'gi'), '');
-    return cleaned.replace(/\s\s+/g, ' ').trim();
-};
+const EDITION_TAGS_RE = new RegExp(`\\b(${[
+    'Standard Edition', 'Deluxe Edition', 'Premium Edition', 'Gold Edition',
+    'Complete Edition', 'Ultimate Edition', 'GOTY Edition', 'Game of the Year Edition',
+    'Versus Edition', 'Anniversary', 'Party Favor', 'Mod Kit', 'Development Toolkit',
+    'Editor', 'Trial Week', 'Free Demo', 'Alpha 2'
+].join('|')})\\b`, 'gi');
 
-const wikidata = async (params) => {
-    const response = await fetch(WIKIDATA_API + params);
-    if (!response.ok) throw new Error(`Wikidata ${response.status}`);
+// "Control Ultimate Edition™" -> "Control"
+const stripEditionTags = (name) => name.replace(/™|®/g, '').replace(EDITION_TAGS_RE, '').replace(/\s\s+/g, ' ').trim();
+
+// The original sanitizer, for a second Steam lookup: also drops the subtitle ("Remnant: From the Ashes" -> "Remnant")
+const sanitizeGameName = (name) => stripEditionTags(name.replace(/™|®/g, '').split(/[:—]|\s--\s/)[0]);
+
+// Search engines treat some characters as syntax (quotes, minus, colons), so keep only plain text
+const searchText = (term) => term.replace(/[^\p{L}\p{N}\s'&.]/gu, ' ').replace(/\s+/g, ' ').trim();
+
+const apiJson = async (service, url) => {
+    let response;
+    try {
+        response = await fetch(url);
+    } catch (error) {
+        throw new Error(`${service} unreachable (${error.message})`);
+    }
+    if (response.status === 429 || response.status === 503) throw new RateLimitError(service, response.status);
+    if (!response.ok) throw new Error(`${service} HTTP ${response.status}`);
     return response.json();
 };
 
@@ -454,14 +531,14 @@ const entityNames = (entity) => {
 
 // One search term -> Steam app ID or null. Only accepts an exact (normalized) name match,
 // or a close prefix match, so a wrong cover is never shown.
-const lookupTerm = async (term) => {
-    const query = term.replace(/[^\p{L}\p{N}\s'&.]/gu, ' ').replace(/\s+/g, ' ').trim();
+const lookupSteamTerm = async (term) => {
+    const query = searchText(term);
     if (!query) return null;
-    const search = await wikidata(`action=query&list=search&srsearch=${encodeURIComponent(`${query} haswbstatement:P1733`)}&srlimit=5&srprop=`);
+    const search = await apiJson('Wikidata', `${WIKIDATA_API}action=query&list=search&srsearch=${encodeURIComponent(`${query} haswbstatement:P1733`)}&srlimit=5&srprop=`);
     const ids = (search.query?.search || []).map(r => r.title);
     if (ids.length === 0) return null;
 
-    const entities = (await wikidata(`action=wbgetentities&ids=${ids.join('|')}&props=labels|aliases&languages=en|mul`)).entities || {};
+    const entities = (await apiJson('Wikidata', `${WIKIDATA_API}action=wbgetentities&ids=${ids.join('|')}&props=labels|aliases&languages=en|mul`)).entities || {};
     const target = normalizeName(term);
     const candidates = ids.map(id => ({ id, names: entities[id] ? entityNames(entities[id]).map(normalizeName) : [] }));
 
@@ -469,63 +546,147 @@ const lookupTerm = async (term) => {
         || candidates.find(c => c.names.some(n => n.length > 3 && (target.startsWith(`${n} `) || n.startsWith(`${target} `))));
     if (!match) return null;
 
-    const claims = (await wikidata(`action=wbgetclaims&entity=${match.id}&property=P1733`)).claims?.P1733 || [];
-    const claim = claims.find(c => c.rank === 'preferred') || claims.find(c => c.rank !== 'deprecated');
+    const claims = (await apiJson('Wikidata', `${WIKIDATA_API}action=wbgetclaims&entity=${match.id}&property=P1733`)).claims?.P1733 || [];
+    // A "deprecated" Steam ID usually still has its store art (e.g. a game whose page became a remaster),
+    // so it's used only when there's nothing better
+    const claim = claims.find(c => c.rank === 'preferred') || claims.find(c => c.rank === 'normal') || claims[0];
     return claim?.mainsnak?.datavalue?.value || null;
 };
 
-const lookupSteamId = async (name) => {
+const lookupSteam = async (name) => {
     const terms = [name];
     const sanitized = sanitizeGameName(name);
     if (sanitized && normalizeName(sanitized) !== normalizeName(name)) terms.push(sanitized);
     for (const term of terms) {
-        const appId = await lookupTerm(term);
-        if (appId) return appId;
+        const appId = await lookupSteamTerm(term);
+        if (appId) return { source: 'steam', id: appId };
     }
     return null;
 };
 
-// Small queue: at most 3 lookups at a time, spaced out, deduplicated by name
+// "Alan Wake 2 (video game)" -> "alan wake 2"
+const wikipediaTitleKey = (title) => normalizeName(title.replace(/\s*\([^)]*\b(?:video game|game)\b[^)]*\)\s*$/i, ''));
+
+// Fallback: the lead image of the game's English Wikipedia article (usually the box art).
+// Accepted only when the article title matches the game name exactly.
+const lookupWikipedia = async (name) => {
+    const query = searchText(name);
+    if (!query) return null;
+    const data = await apiJson('Wikipedia', `${WIKIPEDIA_API}action=query&generator=search&gsrsearch=${encodeURIComponent(`${query} video game`)}` +
+        '&gsrlimit=3&prop=pageimages&piprop=thumbnail&pithumbsize=600&pilicense=any');
+    // The subtitle is kept: "Arknights: Endfield" must not match the "Arknights" article
+    const targets = new Set([normalizeName(name), normalizeName(stripEditionTags(name))].filter(Boolean));
+    const pages = (data.query?.pages || []).sort((a, b) => a.index - b.index);
+    const page = pages.find(p => p.thumbnail && targets.has(wikipediaTitleKey(p.title)));
+    return page ? { source: 'wikipedia', url: page.thumbnail.source, title: page.title } : null;
+};
+
+const lookupCover = async (name) => (await lookupSteam(name)) || lookupWikipedia(name);
+
+// Priority queue for lookups: the shown page first (in grid order), then the next page.
+// When the page changes, waiting lookups for pages no longer in view are dropped.
 const coverQueue = (() => {
-    const pending = [];
-    const inflight = new Map();
+    const jobs = new Map(); // key -> job
     let active = 0;
     let lastStart = 0;
+    let order = 0;
+    let pausedUntil = 0;
+    let pauseStep = 0;
+    let resumeTimer = null;
 
-    const pump = async () => {
-        if (active >= MAX_CONCURRENT_LOOKUPS || pending.length === 0) return;
-        const job = pending.shift();
+    const next = () => {
+        let best = null;
+        for (const job of jobs.values()) {
+            if (job.started) continue;
+            if (!best || job.priority < best.priority || (job.priority === best.priority && job.order < best.order)) best = job;
+        }
+        return best;
+    };
+
+    const pump = () => {
+        const wait = pausedUntil - Date.now();
+        if (wait > 0) {
+            clearTimeout(resumeTimer);
+            resumeTimer = setTimeout(pump, wait);
+            return;
+        }
+        while (active < MAX_CONCURRENT_LOOKUPS) {
+            const job = next();
+            if (!job) return;
+            run(job);
+        }
+    };
+
+    const run = async (job) => {
+        job.started = true;
         active++;
         const wait = Math.max(0, lastStart + LOOKUP_SPACING_MS - Date.now());
         lastStart = Date.now() + wait;
         if (wait) await sleep(wait);
-        pump();
+        const done = log.covers.time(`lookup "${job.name}"`);
         try {
-            const appId = await lookupSteamId(job.name);
-            imageCache.set(job.key, appId);
-            job.resolve(appId);
+            const result = await (job.mode === 'wikipedia' ? lookupWikipedia(job.name) : lookupCover(job.name));
+            coverCache.set(job.key, result);
+            pauseStep = 0;
+            done({ result: result ? result.source : 'none', priority: job.priority });
+            jobs.delete(job.mapKey);
+            job.resolve(result);
         } catch (error) {
-            // Network/rate-limit errors are not cached, so they are retried next time
-            console.warn(`Cover lookup failed for "${job.name}":`, error.message);
-            job.resolve(null);
+            if (error instanceof RateLimitError) {
+                // Put the job back and pause the whole queue for a while. Parallel lookups hitting
+                // the same limit don't stretch the pause again.
+                job.started = false;
+                if (Date.now() >= pausedUntil) {
+                    const pause = RATE_LIMIT_PAUSES_MS[Math.min(pauseStep++, RATE_LIMIT_PAUSES_MS.length - 1)];
+                    pausedUntil = Date.now() + pause;
+                    log.covers.warn(`${error.message}, pausing cover lookups for ${pause / 1000}s`);
+                }
+            } else {
+                // Not cached, so it's retried the next time the game is shown
+                log.covers.warn(`Lookup failed for "${job.name}"`, error.message);
+                jobs.delete(job.mapKey);
+                job.resolve(null);
+            }
         } finally {
-            inflight.delete(job.key);
             active--;
             pump();
         }
     };
 
     return {
-        get(name) {
+        // Resolves with a result, null or DEFERRED. mode 'wikipedia' skips Steam (used when a Steam image is missing).
+        get(name, { priority = PRIORITY.now, mode = 'auto' } = {}) {
             const key = normalizeName(name);
-            const cached = imageCache.get(key);
-            if (cached !== undefined) return Promise.resolve(cached);
-            if (inflight.has(key)) return inflight.get(key);
-            const promise = new Promise(resolve => pending.push({ key, name, resolve }));
-            inflight.set(key, promise);
+            if (mode === 'auto') {
+                const cached = coverCache.get(key);
+                if (cached !== undefined) return Promise.resolve(cached);
+            }
+            const mapKey = `${mode}|${key}`;
+            const existing = jobs.get(mapKey);
+            if (existing) {
+                if (!existing.started && priority < existing.priority) { existing.priority = priority; existing.order = order++; }
+                return existing.promise;
+            }
+            let resolve;
+            const promise = new Promise(r => { resolve = r; });
+            jobs.set(mapKey, { key, mapKey, name, mode, priority, order: order++, started: false, promise, resolve });
             pump();
             return promise;
-        }
+        },
+        // Keeps waiting jobs for the shown and next page (shown first, in grid order); drops the rest
+        focus(currentNames, nextNames = []) {
+            const current = new Map(currentNames.map((name, index) => [normalizeName(name), index]));
+            const upcoming = new Set(nextNames.map(normalizeName));
+            let dropped = 0;
+            for (const job of [...jobs.values()]) {
+                if (job.started) continue;
+                if (current.has(job.key)) { job.priority = PRIORITY.now; job.order = current.get(job.key) - 1e6; }
+                else if (upcoming.has(job.key)) job.priority = PRIORITY.prefetch;
+                else { jobs.delete(job.mapKey); job.resolve(DEFERRED); dropped++; }
+            }
+            if (dropped) log.covers.debug('Dropped lookups for pages no longer shown', { dropped });
+        },
+        stats: () => ({ waiting: [...jobs.values()].filter(j => !j.started).length, active, pausedMs: Math.max(0, pausedUntil - Date.now()) })
     };
 })();
 
@@ -534,31 +695,61 @@ const initialsOf = (name) => {
     return (words.slice(0, 2).map(w => w[0]).join('') || '?').toUpperCase();
 };
 
-const fillCover = (coverEl, name) => {
-    if (coverEl.dataset.coverState) return;
-    coverEl.dataset.coverState = 'loading';
-    coverQueue.get(name).then(appId => {
-        if (!appId) { coverEl.dataset.coverState = 'none'; return; }
-        const img = new Image();
-        img.alt = '';
-        img.decoding = 'async';
-        img.onload = () => { img.classList.add('is-loaded'); coverEl.dataset.coverState = 'done'; };
-        img.onerror = () => { img.remove(); coverEl.dataset.coverState = 'none'; };
-        img.src = STEAM_HEADER(appId);
-        coverEl.appendChild(img);
-        coverEl.dataset.steamId = appId;
-    });
+const showCover = (coverEl, name, result) => {
+    if (result === DEFERRED) { delete coverEl.dataset.coverState; return; }
+    if (!result) { coverEl.dataset.coverState = 'none'; return; }
+
+    const img = new Image();
+    img.alt = '';
+    img.decoding = 'async';
+    img.onload = () => { img.classList.add('is-loaded'); coverEl.dataset.coverState = 'done'; };
+
+    if (result.source === 'steam') {
+        coverEl.dataset.steamId = result.id;
+        img.onerror = () => {
+            // The Steam image is missing: try Wikipedia once, and remember the result
+            img.remove();
+            log.covers.info(`Steam image missing for "${name}", trying Wikipedia`, { steamId: result.id });
+            coverQueue.get(name, { mode: 'wikipedia' }).then(fallback => {
+                if (fallback && fallback !== DEFERRED) {
+                    coverCache.set(normalizeName(name), fallback);
+                    delete coverEl.dataset.steamId;
+                    showCover(coverEl, name, fallback);
+                } else {
+                    coverEl.dataset.coverState = 'none';
+                }
+            });
+        };
+        img.src = STEAM_HEADER(result.id);
+    } else {
+        // Box art is portrait: show it whole, over a blurred copy that fills the wide frame
+        coverEl.dataset.wikiTitle = result.title;
+        const backdrop = document.createElement('div');
+        backdrop.className = 'cover-blur';
+        backdrop.style.backgroundImage = `url("${result.url.replace(/"/g, '%22')}")`;
+        coverEl.appendChild(backdrop);
+        img.className = 'cover-contain';
+        img.onerror = () => { img.remove(); backdrop.remove(); coverEl.dataset.coverState = 'none'; log.covers.warn(`Wikipedia image failed for "${name}"`); };
+        img.src = result.url;
+    }
+    coverEl.appendChild(img);
 };
 
-const coverObserver = 'IntersectionObserver' in window
-    ? new IntersectionObserver(entries => {
-        for (const entry of entries) {
-            if (!entry.isIntersecting) continue;
-            coverObserver.unobserve(entry.target);
-            fillCover(entry.target, entry.target.dataset.name);
-        }
-    }, { rootMargin: '300px 0px' })
-    : null;
+const fillCover = (coverEl, name, priority = PRIORITY.now) => {
+    if (coverEl.dataset.coverState) return;
+    coverEl.dataset.coverState = 'loading';
+    coverQueue.get(name, { priority }).then(result => showCover(coverEl, name, result));
+};
+
+// Look up the next page's covers in the background and warm up the browser cache with their images
+const prefetchCover = (name) => {
+    coverQueue.get(name, { priority: PRIORITY.prefetch }).then(result => {
+        if (!result || result === DEFERRED) return;
+        const img = new Image();
+        img.fetchPriority = 'low';
+        img.src = result.source === 'steam' ? STEAM_HEADER(result.id) : result.url;
+    });
+};
 
 const coverHtml = (name) => `
     <div class="cover" data-name="${escapeHtml(name)}">
@@ -583,7 +774,8 @@ const state = {
     priceMin: null,
     priceMax: null,
     drawerItemId: null,
-    fields: new Set()
+    fields: new Set(),
+    page: 1
 };
 
 const els = {
@@ -615,6 +807,9 @@ const els = {
     dragOverlay: $('#drag-overlay'),
     toast: $('#toast'),
     receiving: $('#receiving'),
+    pagination: $('#pagination'),
+    toolbar: $('.toolbar'),
+    topbar: $('.topbar'),
     menuVersion: $('#menu-version'),
     exportModal: $('#export-modal'),
     exportForm: $('#export-form'),
@@ -745,16 +940,98 @@ const renderStats = (items) => {
         </div>`;
 };
 
+// ---- Pages ----
+
+const PAGE_SIZE = 48;
+
+// Page numbers to show: all of them when there are few, otherwise first, last and the
+// neighbours of the current page, with gaps ("…") in between
+const pageList = (current, count) => {
+    if (count <= 7) return Array.from({ length: count }, (_, i) => i + 1);
+    const pages = new Set([1, count, current - 1, current, current + 1]);
+    if (current <= 3) [2, 3, 4].forEach(p => pages.add(p));
+    if (current >= count - 2) [count - 3, count - 2, count - 1].forEach(p => pages.add(p));
+    const sorted = [...pages].filter(p => p >= 1 && p <= count).sort((a, b) => a - b);
+    const out = [];
+    sorted.forEach((p, i) => {
+        if (i > 0 && p - sorted[i - 1] > 1) out.push('gap');
+        out.push(p);
+    });
+    return out;
+};
+
+const renderPagination = (pageCount) => {
+    els.pagination.hidden = pageCount <= 1;
+    if (pageCount <= 1) { els.pagination.replaceChildren(); return; }
+    const current = state.page;
+    const chevron = (dir) => `<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="${dir === 'prev'
+        ? 'M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12z' : 'M8.59 16.59 10 18l6-6-6-6-1.41 1.41L13.17 12z'}"/></svg>`;
+    const parts = [
+        `<button type="button" class="page-btn page-step" data-page="${current - 1}" ${current === 1 ? 'disabled' : ''}>${chevron('prev')}<span>Previous</span></button>`,
+        '<div class="page-numbers">',
+        ...pageList(current, pageCount).map(p => p === 'gap'
+            ? '<span class="page-gap" aria-hidden="true">…</span>'
+            : `<button type="button" class="page-btn" data-page="${p}" ${p === current ? 'aria-current="page"' : ''} aria-label="Page ${p}">${p}</button>`),
+        '</div>',
+        `<button type="button" class="page-btn page-step" data-page="${current + 1}" ${current === pageCount ? 'disabled' : ''}><span>Next</span>${chevron('next')}</button>`
+    ];
+    els.pagination.innerHTML = parts.join('');
+};
+
+const pageFromUrl = () => {
+    const page = parseInt(new URLSearchParams(location.search).get('page'), 10);
+    return page > 0 ? page : 1;
+};
+
+const urlForPage = (page) => {
+    const url = new URL(location.href);
+    if (page > 1) url.searchParams.set('page', String(page)); else url.searchParams.delete('page');
+    return url.pathname + url.search + url.hash;
+};
+
+// Back to page 1 after a search, filter or sort change (without adding history entries)
+const resetPage = () => {
+    state.page = 1;
+    if (pageFromUrl() !== 1) history.replaceState(history.state, '', urlForPage(1));
+};
+
+const goToPage = (page) => {
+    if (page === state.page) return;
+    state.page = page;
+    history.pushState({ page }, '', urlForPage(page));
+    render();
+    // Bring the top of the grid into view, below the sticky top bar
+    const top = els.toolbar.getBoundingClientRect().top + window.scrollY - els.topbar.offsetHeight - 12;
+    window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+};
+
 const render = () => {
     const items = getFilteredItems();
+    const pageCount = Math.max(1, Math.ceil(items.length / PAGE_SIZE));
+    state.page = Math.min(Math.max(1, state.page), pageCount);
+    const start = (state.page - 1) * PAGE_SIZE;
+    const pageItems = items.slice(start, start + PAGE_SIZE);
+    const nextItems = items.slice(start + PAGE_SIZE, start + PAGE_SIZE * 2);
+
     const fragment = document.createDocumentFragment();
-    for (const item of items) fragment.appendChild(state.cards.get(item.id));
+    for (const item of pageItems) fragment.appendChild(state.cards.get(item.id));
     els.grid.replaceChildren(fragment);
 
+    // Covers: this page right away (in grid order), the next page in the background, nothing else
+    coverQueue.focus(pageItems.map(i => i.name), nextItems.map(i => i.name));
+    for (const item of pageItems) fillCover(state.cards.get(item.id).querySelector('.cover'), item.name);
+    for (const item of nextItems) prefetchCover(item.name);
+
     els.noResults.hidden = items.length > 0;
-    els.resultCount.textContent = items.length === state.items.length
-        ? `${items.length.toLocaleString()} games`
-        : `${items.length.toLocaleString()} of ${state.items.length.toLocaleString()}`;
+    const total = state.items.length;
+    if (pageCount > 1) {
+        els.resultCount.textContent = `${(start + 1).toLocaleString()}–${(start + pageItems.length).toLocaleString()} of ${items.length.toLocaleString()}`;
+    } else {
+        els.resultCount.textContent = items.length === total
+            ? `${items.length.toLocaleString()} games`
+            : `${items.length.toLocaleString()} of ${total.toLocaleString()}`;
+    }
+    renderPagination(pageCount);
 
     const filtersActive = Boolean(state.dateFrom || state.dateTo || state.priceMin !== null || state.priceMax !== null);
     els.filtersDot.hidden = !filtersActive;
@@ -809,21 +1086,27 @@ const persistLibrary = () => {
         sessionStorage.setItem(SESSION_KEY, JSON.stringify({
             v: 1, fileName: state.fileName, format: state.format, fields: [...state.fields], data
         }));
-    } catch { /* storage full or unavailable: the library just won't survive a reload */ }
+    } catch (error) {
+        // Storage full or unavailable: the library just won't survive a reload
+        log.storage.warn('Could not keep the library for this tab', error.message);
+    }
 };
 
 const restoreLibrary = () => {
     try {
         const payload = JSON.parse(sessionStorage.getItem(SESSION_KEY) || 'null');
         if (!payload || payload.v !== 1 || !payload.data) return false;
-        loadLibrary(structuredToOrders(payload.data), payload.fileName, payload.format, payload.fields, { persist: false, toast: null });
+        loadLibrary(structuredToOrders(payload.data), payload.fileName, payload.format, payload.fields, { persist: false, toast: null, keepPage: true });
+        log.app.debug('Restored the library from this tab', { games: state.items.length, page: state.page });
         return true;
-    } catch {
+    } catch (error) {
+        log.storage.warn('Could not restore the library for this tab', error.message);
         return false;
     }
 };
 
-const loadLibrary = (orders, fileName, format, fields = [], { persist = true, toast } = {}) => {
+const loadLibrary = (orders, fileName, format, fields = [], { persist = true, toast, keepPage = false } = {}) => {
+    if (keepPage) state.page = pageFromUrl(); else resetPage();
     state.orders = orders;
     state.items = buildItems(orders);
     state.fileName = fileName;
@@ -831,13 +1114,8 @@ const loadLibrary = (orders, fileName, format, fields = [], { persist = true, to
     state.fields = new Set(fields);
     state.cards = new Map();
 
-    for (const item of state.items) {
-        const card = createCard(item);
-        state.cards.set(item.id, card);
-        const cover = card.querySelector('.cover');
-        if (coverObserver) coverObserver.observe(cover);
-        else fillCover(cover, item.name);
-    }
+    // Cards are created once; covers are filled page by page in render()
+    for (const item of state.items) state.cards.set(item.id, createCard(item));
 
     els.giftChip.hidden = !state.items.some(i => i.giftRecipient);
     if (els.giftChip.hidden && state.filter === 'gift') setFilterChip('all');
@@ -869,6 +1147,8 @@ const closeLibrary = () => {
     els.emptyState.hidden = false;
     els.search.value = '';
     state.search = '';
+    resetPage();
+    els.pagination.hidden = true;
     document.body.classList.remove('is-loaded');
     document.querySelectorAll('[data-loaded-only]').forEach(el => { el.hidden = true; });
     window.scrollTo(0, 0);
@@ -892,20 +1172,38 @@ const readImportHash = () => {
 
 const requestFromExtension = ({ token, extensionId }) => new Promise((resolve, reject) => {
     const runtime = window.chrome && window.chrome.runtime;
-    if (!/^[a-p]{32}$/.test(extensionId) || !runtime || typeof runtime.sendMessage !== 'function') {
+    if (!/^[a-p]{32}$/.test(extensionId)) {
+        log.import.warn('Invalid extension ID in the link', { extensionId });
         reject(new Error('unreachable'));
         return;
     }
-    const timer = setTimeout(() => reject(new Error('unreachable')), 8000);
+    if (!runtime || typeof runtime.sendMessage !== 'function') {
+        log.import.warn('chrome.runtime is not available: the extension is missing, disabled, or not allowed on this site');
+        reject(new Error('unreachable'));
+        return;
+    }
+    const timer = setTimeout(() => {
+        log.import.warn('The extension did not answer within 8 seconds');
+        reject(new Error('unreachable'));
+    }, 8000);
     try {
         runtime.sendMessage(extensionId, { type: 'EGLE_GET_EXPORT', token }, (response) => {
             clearTimeout(timer);
-            if (runtime.lastError) { reject(new Error('unreachable')); return; }
-            if (!response || !response.ok) { reject(new Error(response && response.error === 'expired' ? 'expired' : 'unreachable')); return; }
+            if (runtime.lastError) {
+                log.import.warn('Message to the extension failed', runtime.lastError.message);
+                reject(new Error('unreachable'));
+                return;
+            }
+            if (!response || !response.ok) {
+                log.import.warn('The extension refused the request', response);
+                reject(new Error(response && response.error === 'expired' ? 'expired' : 'unreachable'));
+                return;
+            }
             resolve(response);
         });
-    } catch {
+    } catch (error) {
         clearTimeout(timer);
+        log.import.warn('Could not send the message to the extension', error.message);
         reject(new Error('unreachable'));
     }
 });
@@ -913,8 +1211,11 @@ const requestFromExtension = ({ token, extensionId }) => new Promise((resolve, r
 const importFromExtension = async (request) => {
     els.receiving.hidden = false;
     els.dropzone.hidden = true;
+    log.import.info('Requesting the library from the extension', { extensionId: request.extensionId });
     try {
+        const done = log.import.time('receive from extension');
         const response = await requestFromExtension(request);
+        done({ orders: response.data && response.data.orders ? response.data.orders.length : 0, exporter: response.version });
         const orders = structuredToOrders(response.data);
         const count = orders.reduce((sum, order) => sum + order.items.length, 0);
         const from = `Epic Games Library Exporter${response.version ? ` ${response.version}` : ''}`;
@@ -998,13 +1299,16 @@ const openDrawer = (itemId) => {
 
     const cover = els.drawerBody.querySelector('.cover');
     fillCover(cover, item.name);
-    coverQueue.get(item.name).then(appId => {
-        if (!appId || state.drawerItemId !== itemId) return;
+    coverQueue.get(item.name).then(result => {
+        if (!result || result === DEFERRED || state.drawerItemId !== itemId) return;
         const links = $('#drawer-links');
-        if (links && !links.querySelector('[data-steam]')) {
-            links.insertAdjacentHTML('beforeend',
-                `<a data-steam href="https://store.steampowered.com/app/${encodeURIComponent(appId)}/" target="_blank" rel="noopener noreferrer">${icons.external}Steam page</a>`);
-        }
+        if (!links || links.querySelector('[data-cover-link]')) return;
+        const href = result.source === 'steam'
+            ? `https://store.steampowered.com/app/${encodeURIComponent(result.id)}/`
+            : `https://en.wikipedia.org/wiki/${encodeURIComponent(result.title.replace(/ /g, '_'))}`;
+        const label = result.source === 'steam' ? 'Steam page' : 'Wikipedia';
+        links.insertAdjacentHTML('beforeend',
+            `<a data-cover-link href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer">${icons.external}${label}</a>`);
     });
 
     els.drawerBackdrop.hidden = false;
@@ -1163,6 +1467,7 @@ const downloadExport = () => {
     storage.set(EXPORT_PREFS_KEY, JSON.stringify({ format, fields: options }));
     const orders = ordersForExport(startDate, endDate).map(toCanonical);
     const file = Core.buildFile(orders, format, options, { exporter: viewerMeta(), filters: { startDate, endDate } });
+    log.export.info('Export built', { format, orders: file.orderCount, games: file.itemCount, chars: file.content.length });
 
     const blob = new Blob([file.content], { type: `${file.mimeType};charset=utf-8` });
     const link = document.createElement('a');
@@ -1196,18 +1501,23 @@ const handleFile = (file) => {
     const reader = new FileReader();
     reader.onload = () => {
         try {
+            const done = log.parse.time(`parse "${file.name}"`);
             const { orders, format, fields } = parseFile(String(reader.result), file.name);
+            done({ format, orders: orders.length, games: orders.reduce((n, o) => n + o.items.length, 0), bytes: file.size });
             if (!orders.length || !orders.some(o => o.items.length)) {
                 showLoadError('No games were found in this file.');
                 return;
             }
             loadLibrary(orders, file.name, format, fields);
         } catch (error) {
-            console.error(error);
+            log.parse.error(`Could not read "${file.name}"`, error);
             showLoadError(error.message || 'This file could not be read.');
         }
     };
-    reader.onerror = () => showLoadError('This file could not be read.');
+    reader.onerror = () => {
+        log.parse.error(`FileReader failed for "${file.name}"`, reader.error);
+        showLoadError('This file could not be read.');
+    };
     reader.readAsText(file, 'utf-8');
 };
 
@@ -1269,10 +1579,12 @@ const init = () => {
     });
 
     // Search, sort, chips
-    els.search.addEventListener('input', debounce(() => { state.search = els.search.value; render(); }, 120));
-    els.sort.addEventListener('change', () => { state.sort = els.sort.value; render(); });
+    // Search shows page 1 of the results, and their covers are fetched ahead of anything else
+    els.search.addEventListener('input', debounce(() => { state.search = els.search.value; resetPage(); render(); }, 120));
+    els.sort.addEventListener('change', () => { state.sort = els.sort.value; resetPage(); render(); });
     document.querySelectorAll('.chip').forEach(chip => chip.addEventListener('click', () => {
         setFilterChip(chip.dataset.filter);
+        resetPage();
         render();
     }));
 
@@ -1284,6 +1596,7 @@ const init = () => {
         state.dateTo = els.dateTo.value || null;
         state.priceMin = readNumber(els.priceMin);
         state.priceMax = readNumber(els.priceMax);
+        resetPage();
         render();
     };
     [els.dateFrom, els.dateTo].forEach(input => input.addEventListener('change', onFilterInput));
@@ -1338,6 +1651,17 @@ const init = () => {
         }
     });
 
+    // Pages
+    els.pagination.addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-page]');
+        if (btn && !btn.disabled) goToPage(Number(btn.dataset.page));
+    });
+    window.addEventListener('popstate', () => {
+        if (!state.items.length) return;
+        state.page = pageFromUrl();
+        render();
+    });
+
     // Export dialog
     $('#export-btn').addEventListener('click', openExportDialog);
     $('#export-close').addEventListener('click', closeExportDialog);
@@ -1362,6 +1686,6 @@ const init = () => {
 init();
 
 // Exposed for debugging and tests only
-window.__egv = { parseFile, buildItems, parseMoney, parseDateValue, lookupSteamId, loadLibrary, toCanonical, state };
+window.__egv = { parseFile, buildItems, parseMoney, parseDateValue, lookupCover, lookupWikipedia, coverQueue, loadLibrary, toCanonical, state };
 
 })();
