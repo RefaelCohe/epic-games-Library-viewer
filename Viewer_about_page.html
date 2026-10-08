@@ -1,446 +1,197 @@
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
 <head>
-    <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>About - Epic Games Library Viewer</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><defs><linearGradient id='bg' x1='0%25' y1='0%25' x2='100%25' y2='100%25'><stop offset='0%25' style='stop-color:%23667eea'/><stop offset='100%25' style='stop-color:%23764ba2'/></linearGradient></defs><circle cx='16' cy='16' r='15' fill='url(%23bg)' stroke='%23fff' stroke-width='1'/><circle cx='16' cy='10' r='2.5' fill='%23fff'/><rect x='14' y='14' width='4' height='12' rx='2' fill='%23fff'/><circle cx='16' cy='28' r='1' fill='%23fff' opacity='0.7'/></svg>">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
-        
-        :root {
-            --primary-color: #007bff;
-            --secondary-color: #28a745;
-            --accent-color: #17a2b8;
-            --dark-color: #343a40;
-            --light-color: #f8f9fa;
-            --border-color: #dee2e6;
-            --text-color: #212529;
-            --text-muted: #6c757d;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Poppins', sans-serif;
-            line-height: 1.6;
-            color: var(--text-color);
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-        }
-
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 2rem;
-        }
-
-        .header {
-            text-align: center;
-            background: white;
-            border-radius: 20px;
-            padding: 3rem 2rem;
-            margin-bottom: 2rem;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-        }
-
-        .header h1 {
-            font-size: 2.5rem;
-            font-weight: 700;
-            color: var(--primary-color);
-            margin-bottom: 0.5rem;
-        }
-
-        .header .subtitle {
-            font-size: 1.2rem;
-            color: var(--text-muted);
-            font-weight: 300;
-        }
-
-        .version-badge {
-            display: inline-block;
-            background: var(--secondary-color);
-            color: white;
-            padding: 0.3rem 0.8rem;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            font-weight: 500;
-            margin-top: 1rem;
-        }
-
-        .project-link {
-            display: inline-block;
-            background: rgb(38, 109, 167);
-            color: white;
-            padding: 0.3rem 0.8rem;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            font-weight: 500;
-            margin-top: 1rem;
-            text-decoration: none; /* מסיר את הקו התחתון */
-            transition: all 0.3s ease; /* אותו אפקט מעבר חלק כמו ב-contact-links */
-        }
-
-        .project-link-middle:hover {
-            background: var(--primary-color); /* אותו צבע רקע כמו ב-contact-links */
-            color: white; /* טקסט לבן בעת hover */
-        }
-
-        .project-link-middle {
-            display: inline-block;
-            background: rgb(205, 205, 205);
-            color: white;
-            padding: 0.3rem 0.8rem;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            font-weight: 500;
-            margin-top: 1rem;
-            text-decoration: none; /* מסיר את הקו התחתון */
-            transition: all 0.3s ease; /* אותו אפקט מעבר חלק כמו ב-contact-links */
-        }
-
-        .project-link:hover {
-            background: var(--primary-color); /* אותו צבע רקע כמו ב-contact-links */
-            color: white; /* טקסט לבן בעת hover */
-        }
-
-        .content-grid {
-            display: grid;
-            gap: 2rem;
-            grid-template-columns: 1fr;
-        }
-
-        @media (min-width: 768px) {
-            .content-grid {
-                grid-template-columns: 1fr 1fr;
-            }
-        }
-
-        .card {
-            background: white;
-            border-radius: 15px;
-            padding: 2rem;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
-        }
-
-        .card-icon {
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
-            display: block;
-        }
-
-        .card h3 {
-            font-size: 1.4rem;
-            font-weight: 600;
-            margin-bottom: 1rem;
-            color: var(--dark-color);
-        }
-
-        .card p {
-            color: var(--text-muted);
-            margin-bottom: 1rem;
-        }
-
-        .full-width {
-            grid-column: 1 / -1;
-        }
-
-        .developer-info {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .avatar {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2rem;
-            color: white;
-            font-weight: 600;
-            overflow: hidden;
-        }
-
-        .avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
-        }
-
-        .contact-links {
-            display: flex;
-            gap: 1rem;
-            flex-wrap: wrap;
-            justify-content: center;
-            margin-top: 1.5rem;
-        }
-
-        .contact-link {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.6rem 1.2rem;
-            background: var(--light-color);
-            color: var(--dark-color);
-            text-decoration: none;
-            border-radius: 25px;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            border: 2px solid transparent;
-        }
-
-        .contact-link:hover {
-            background: var(--primary-color);
-            color: white;
-            transform: translateY(-2px);
-        }
-
-        .features-list {
-            list-style: none;
-            padding: 0;
-        }
-
-        .features-list li {
-            display: flex;
-            align-items: center;
-            gap: 0.8rem;
-            padding: 0.5rem 0;
-            color: var(--text-muted);
-        }
-
-        .features-list li::before {
-            content: "✅";
-            font-size: 1.1rem;
-        }
-
-        .credits-list {
-            list-style: none;
-            padding: 0;
-        }
-
-        .credits-list li {
-            background: var(--light-color);
-            margin: 0.5rem 0;
-            padding: 1rem;
-            border-radius: 8px;
-            border-left: 4px solid var(--accent-color);
-        }
-
-        .credits-list strong {
-            color: var(--dark-color);
-            display: block;
-            margin-bottom: 0.3rem;
-        }
-
-        .privacy-notice {
-            background: linear-gradient(135deg, #28a745, #20c997);
-            color: white;
-            text-align: center;
-            border-radius: 15px;
-            padding: 2rem;
-        }
-
-        .privacy-notice h3 {
-            color: white;
-            margin-bottom: 1rem;
-        }
-
-        .back-button {
-            position: fixed;
-            top: 2rem;
-            left: 2rem;
-            background: white;
-            color: var(--primary-color);
-            border: none;
-            padding: 0.8rem 1.5rem;
-            border-radius: 25px;
-            font-weight: 600;
-            cursor: pointer;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-            transition: all 0.3s ease;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .back-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
-        }
-
-        .footer {
-            text-align: center;
-            margin-top: 3rem;
-            padding: 2rem;
-            color: white;
-            opacity: 0.8;
-        }
-    </style>
+    <meta name="color-scheme" content="dark light">
+    <title>Epic Games Library Viewer</title>
+    <meta name="description" content="See every game you own on Epic, with covers, stats and full order details. Runs entirely in your browser.">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%233b82f6'/%3E%3Cpath d='M8 9h7v6H8zM17 9h7v6h-7zM8 17h7v6H8zM17 17h7v6h-7z' fill='white'/%3E%3C/svg%3E">
+    <script>
+        (function () {
+            var theme = 'dark';
+            try { theme = localStorage.getItem('egv.theme') || 'dark'; } catch (e) { /* storage unavailable */ }
+            if (theme !== 'system') document.documentElement.setAttribute('data-theme', theme === 'light' ? 'light' : 'dark');
+        })();
+    </script>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="pages.css">
+    <script src="versions.js" defer></script>
+    <script src="pages.js" defer></script>
 </head>
 <body>
-    <a href="javascript:window.close()" class="back-button">← Back</a>
-    
-    <div class="container">
-        <div class="header">
-            <h1>Epic Games Library Viewer</h1>
-            <p class="subtitle">A modern, privacy-focused tool to view and explore your Epic Games library</p>
-            <a href="your-library-viewer-url.html" class="project-link">📚 Open Library Viewer</a>
-            <a href="Chrome.com/store/link" class="project-link" target="_blank">📥 Get Library Exporter Extension</a>
+    <header class="topbar">
+        <div class="topbar-inner">
+            <a class="back-link" id="back-link" href="./">
+                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2Z"/></svg>
+                <span>Back</span>
+            </a>
+            <span class="topbar-sep" aria-hidden="true"></span>
+            <a class="brand" href="./" aria-label="Library Viewer home">
+                <span class="brand-mark" aria-hidden="true"></span>
+                <span class="brand-name">Library</span>
+            </a>
+            <div class="topbar-actions">
+                <button class="icon-btn" id="theme-btn" type="button" title="Theme" aria-label="Change theme"></button>
+            </div>
         </div>
+    </header>
 
-        <div class="content-grid">
+    <main class="page">
+        <section class="hero">
+            <div class="eyebrow">
+                <span>Web app</span>
+                <span class="pill">Version <span data-version="viewer">2.0.0</span></span>
+            </div>
+            <h1>Epic Games Library Viewer</h1>
+            <p class="lead">See every game you own on Epic, with cover art, spending stats and full order details. It runs entirely in your browser.</p>
+            <div class="hero-actions">
+                <a class="btn btn-primary btn-lg" href="./">Open the Library Viewer</a>
+                <a class="btn btn-ghost btn-lg" href="exporter_about_page.html">Get the Exporter extension</a>
+            </div>
+        </section>
 
-            <!-- Features -->
-            <div class="card">
-                <div class="card-icon">🚀</div>
-                <h3>Key Features</h3>
-                <ul class="features-list">
-                    <li>Interactive visual library viewer</li>
-                    <li>Advanced filtering & sorting</li>
-                    <li>Automatic game image fetching</li>
-                    <li>Purchase statistics & analytics</li>
-                    <li>Dark/Light theme support</li>
+        <section class="section" aria-labelledby="features-title">
+            <h2 id="features-title">Features</h2>
+            <p class="section-lead">A clear view of a library Epic only shows inside its launcher.</p>
+            <div class="cards">
+                <article class="feature">
+                    <div class="feature-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z"/></svg></div>
+                    <h3>Cover art</h3>
+                    <p>Games appear with their covers, loaded as you scroll and remembered for next time.</p>
+                </article>
+                <article class="feature">
+                    <div class="feature-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9.2h3V19H5V9.2ZM10.6 5h2.8v14h-2.8V5Zm5.6 8H19v6h-2.8v-6Z"/></svg></div>
+                    <h3>Stats that add up</h3>
+                    <p>Games claimed for free, money spent and saved, kept separate per currency, plus games per year.</p>
+                </article>
+                <article class="feature">
+                    <div class="feature-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.5 3a7.5 7.5 0 0 1 5.96 12.05l4.25 4.24-1.42 1.42-4.24-4.25A7.5 7.5 0 1 1 10.5 3Zm0 2a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11Z"/></svg></div>
+                    <h3>Search, filter and sort</h3>
+                    <p>Find a game instantly. Filter by purchased, free or gifted, by date or by amount paid.</p>
+                </article>
+                <article class="feature">
+                    <div class="feature-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2Zm-4 16H5V5h10v14Z"/></svg></div>
+                    <h3>Full order details</h3>
+                    <p>Click a game to see its order: every item, list price, discount, tax, total and order ID.</p>
+                </article>
+                <article class="feature">
+                    <div class="feature-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 4v8.17l3.59-3.58L18 10l-6 6-6-6 1.41-1.41L11 12.17V4h2ZM5 18h14v2H5v-2Z"/></svg></div>
+                    <h3>Export anytime</h3>
+                    <p>Download your library as JSON, CSV or TXT, in the same formats as the Exporter extension.</p>
+                </article>
+                <article class="feature">
+                    <div class="feature-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36a5.39 5.39 0 0 1-4.4 2.26 5.4 5.4 0 0 1-3.14-9.8A9.3 9.3 0 0 0 12 3Z"/></svg></div>
+                    <h3>Dark and light</h3>
+                    <p>Dark by default, with a light theme or your system setting a click away. Works on phones too.</p>
+                </article>
+            </div>
+        </section>
+
+        <section class="section" aria-labelledby="files-title">
+            <h2 id="files-title">Supported files</h2>
+            <p class="section-lead">Any file made by the Epic Games Library Exporter, old or new.</p>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Format</th><th>Made by</th><th>Notes</th></tr></thead>
+                    <tbody>
+                        <tr><td>Open from the extension</td><td>Exporter 1.3 and later</td><td>No file needed. The extension hands your library straight to the Viewer.</td></tr>
+                        <tr><td><code>.json</code> (structured)</td><td>Exporter 1.3 and later</td><td>Recommended. Orders with their items, numeric amounts and IDs.</td></tr>
+                        <tr><td><code>.csv</code></td><td>Exporter 1.3 and later</td><td>Also opens in Excel and Google Sheets.</td></tr>
+                        <tr><td><code>.txt</code></td><td>All versions</td><td>One line per game, including files from the earliest versions.</td></tr>
+                        <tr><td><code>.json</code> (classic list)</td><td>Earlier versions</td><td>Supported for older exports.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="section" aria-labelledby="faq-title">
+            <h2 id="faq-title">Questions</h2>
+            <div class="faq">
+                <details>
+                    <summary>How do I get my library into the Viewer?</summary>
+                    <p>Install the Exporter extension, open your Epic account page and click Export. When it's done, choose "Open in Library Viewer". You can also load a JSON, CSV or TXT file you saved earlier by dropping it on the Viewer.</p>
+                </details>
+                <details>
+                    <summary>Is my data uploaded anywhere?</summary>
+                    <p>No. Your file is read in your browser and is never uploaded. To find cover art, the Viewer looks up game names on Wikidata and loads the images from Steam's image servers. Nothing else about your purchases is sent.</p>
+                </details>
+                <details>
+                    <summary>Why do some games have no cover?</summary>
+                    <p>Covers come from Steam. Games that aren't sold on Steam, such as some Epic exclusives, show their initials instead. A cover is only shown when the name matches exactly, so you never get the wrong one.</p>
+                </details>
+                <details>
+                    <summary>Does the Viewer remember my library?</summary>
+                    <p>Only while the tab is open, so you can reload or read these pages without losing it. Closing the tab clears it, or choose "Close library" from the menu to clear it right away.</p>
+                </details>
+                <details>
+                    <summary>Can I download my data from the Viewer?</summary>
+                    <p>Yes. Click Export to download JSON, CSV or TXT, with the same fields, date filter and file structure as the extension.</p>
+                </details>
+            </div>
+        </section>
+
+        <section class="section split" aria-label="Privacy and updates">
+            <div class="panel">
+                <h3>Private by design</h3>
+                <ul class="check-list">
+                    <li>Your file never leaves your browser.</li>
+                    <li>No accounts, analytics, ads or tracking.</li>
+                    <li>Only game names are looked up, to find cover art.</li>
                 </ul>
+                <a class="text-link" href="Privacy%20policy/Extension-privacy-policy.html">Read the privacy policy</a>
             </div>
-
-            <!-- Privacy -->
-            <div class="card">
-                <div class="card-icon">🔒</div>
-                <h3>Privacy & Security</h3>
-                <p><strong>Your data stays with you.</strong></p>
-                <ul class="features-list">
-                    <li>Processes data locally only</li>
-                    <li>Never sends data to external servers</li>
-                    <li>No tracking or analytics</li>
-                    <li>No personal information collection</li>
-                    <li>Open source & transparent</li>
-                </ul>
+            <div class="panel">
+                <h3>What's new</h3>
+                <ul class="releases" data-history="viewer"></ul>
             </div>
+        </section>
 
-            <div class="card full-width">
-                <div class="card-icon">❓</div>
-                <h3>Frequently Asked Questions</h3>
-                <div style="text-align: left;">
-                    <strong>Q: How do I export my library data?</strong>
-                    <p>Use our Chrome extension to easily export your Epic Games library data, then upload it to the viewer.</p>
-                    <a href="Chrome.com/store/link" class="project-link-middle" target="_blank" style="margin-bottom: 1.5rem; display: inline-block;">📥 Get Library Exporter Extension</a>
-                    </div>
-
-                    <strong>Q: Is my data safe?</strong>
-                    <p>Absolutely! Your data stays completely private - we don't collect it, store it, or share it with anyone.</p>
-            </div>
-
-            <div class="card full-width">
-                <div class="card-icon">👨‍💻</div>
-                <h3>About Me</h3>
-                <div class="developer-info">
-                    <div class="avatar">
-                        <img src="https://github.com/refaelcohe.png?size=80" alt="Refael Cohen">
-                    </div>
+        <section class="section" aria-labelledby="me-title">
+            <h2 id="me-title">About me</h2>
+            <div class="panel">
+                <div class="dev">
+                    <img src="https://github.com/refaelcohe.png?size=112" alt="" width="56" height="56" loading="lazy">
                     <div>
                         <strong>Refael Cohen</strong>
-                        <p style="margin: 0; color: var(--text-muted);">Vibe Coder & Tech Enthusiast</p>
+                        <span>Vibe coder &amp; tech enthusiast</span>
                     </div>
                 </div>
-                <p>Hi there, I'm Refael Cohen, a passionate technology enthusiast who creates small and useful applications. I'm a big fan of design, podcasts, and user interfaces.
-
-This Tool was born out of necessity - I needed a way to view the list of games I've purchased over the years on the Epic Games Store. Unfortunately, they don't allow you to view this list online; you can only access it by downloading their launcher. (Well, not anymore...)</p>
-                
-                <div class="contact-links">
-                    <a href="https://Dialoger.app" class="contact-link" target="_blank">
-                        Dialoger.app
-                    </a>
-                    <a href="https://x.com/refaelcohe" class="contact-link" target="_blank">
-                        𝕏 (formerly Twitter)
-                    </a>
-                    </a>
-                    <a href="https://buymeacoffee.com/refael" class="contact-link" target="_blank">
-                        ☕ Buy Me a Coffee
-                    </a>
+                <p>Hi, I'm Refael, a technology enthusiast who builds small, useful apps. I'm a big fan of design, podcasts and user interfaces.</p>
+                <p>This tool was born out of necessity. I wanted to see the list of games I've bought over the years on the Epic Games Store, but Epic doesn't show that list online; you only get it by installing their launcher. Well, not anymore.</p>
+                <div class="link-row">
+                    <a href="https://Dialoger.app" target="_blank" rel="noopener">Dialoger.app</a>
+                    <a href="https://x.com/refaelcohe" target="_blank" rel="noopener">𝕏 (Twitter)</a>
+                    <a href="https://buymeacoffee.com/refael" target="_blank" rel="noopener">Buy me a coffee</a>
+                    <a href="https://github.com/refaelcohe/epic-games-Library-viewer" target="_blank" rel="noopener">Source code on GitHub</a>
                 </div>
             </div>
+        </section>
 
-            <!-- Credits -->
-            <div class="card full-width">
-                <div class="card-icon">🙏</div>
-                <h3>Credits & Acknowledgments</h3>
-                <ul class="credits-list">
-                    <li>
-                        <strong> Lalfam9132 <a href="https://www.reddit.com/user/lalfam9132/" target="_blank" style="color: var(--primary-color); text-decoration: none;">on Reddit</a> </strong>
-                    </li>
-                    <li>
-                        <strong>Claude Opus 4 & Gemini Pro 2.5</strong>
-                    </li>
-                    <li>
-                        <strong>Steam API</strong>
-                    </li>
+        <section class="section split" aria-label="Credits and legal">
+            <div class="panel">
+                <h3>Credits</h3>
+                <ul class="check-list">
+                    <li>Lalfam9132 <a class="text-link" href="https://www.reddit.com/user/lalfam9132/" target="_blank" rel="noopener">on Reddit</a></li>
+                    <li>Claude Opus 4 &amp; Gemini Pro 2.5</li>
+                    <li>Wikidata (cover lookup) and Steam (cover images)</li>
                 </ul>
             </div>
-
-            <!-- Legal -->
-            <div class="card full-width privacy-notice">
-                <div class="card-icon">📋</div>
-                <h3>Legal Notice</h3>
-                <p>This Tool is an independent project and is not affiliated with, endorsed by, or sponsored by Epic Games. Epic Games and related trademarks are the property of Epic Games, Inc. This tool is provided "as is" for personal use only.</p>
-                <p>Users are solely responsible for their use of the tool</p>
+            <div class="panel">
+                <h3>Legal notice</h3>
+                <p>This tool is an independent project. It is not affiliated with, endorsed by or sponsored by Epic Games or Valve. Epic Games, Steam and related trademarks are the property of their owners.</p>
+                <p>It is provided "as is" for personal use, and users are responsible for how they use it.</p>
             </div>
-        </div>
+        </section>
+    </main>
 
-
-        <div class="footer">
-            <p>Made with ❤️ for the gaming community | © 2025 Refael Cohen</p>
-            <p>Last updated: June 2025 | Version 1.0</p>
-        </div>
-    </div>
-
-    <script>
-        // Add some subtle animations on scroll
-        const observerOptions = {
-            threshold: 0.1,
-            rootMargin: '0px 0px -50px 0px'
-        };
-
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.style.opacity = '1';
-                    entry.target.style.transform = 'translateY(0)';
-                }
-            });
-        }, observerOptions);
-
-        // Observe all cards
-        document.querySelectorAll('.card').forEach(card => {
-            card.style.opacity = '0';
-            card.style.transform = 'translateY(30px)';
-            card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
-            observer.observe(card);
-        });
-
-        // Add click tracking for analytics (optional)
-        document.querySelectorAll('.contact-link').forEach(link => {
-            link.addEventListener('click', (e) => {
-                console.log('Contact link clicked:', e.target.textContent);
-            });
-        });
-    </script>
+    <footer class="site-footer">
+        <span>&copy; <span id="current-year">2026</span> Refael Cohen &middot; Library Viewer <span data-version="viewer">2.0.0</span> &middot; Updated <span data-updated="viewer">October 2026</span></span>
+        <nav aria-label="Site">
+            <a href="./">Library Viewer</a>
+            <a href="exporter_about_page.html">Exporter extension</a>
+            <a href="Privacy%20policy/Extension-privacy-policy.html">Privacy policy</a>
+        </nav>
+    </footer>
 </body>
 </html>
