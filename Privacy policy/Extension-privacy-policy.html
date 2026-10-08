@@ -1,259 +1,157 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" dir="ltr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Privacy Policy - Epic Games Library Exporter</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            background-color: #f8f9fa;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background-color: white;
-            padding: 40px;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        }
-
-        h1 {
-            color: #2c3e50;
-            margin-bottom: 10px;
-            font-size: 32px;
-            font-weight: 600;
-        }
-
-        .last-updated {
-            color: #7f8c8d;
-            font-size: 14px;
-            margin-bottom: 30px;
-        }
-
-        h2 {
-            color: #34495e;
-            margin-top: 35px;
-            margin-bottom: 15px;
-            font-size: 24px;
-            font-weight: 500;
-            border-bottom: 2px solid #ecf0f1;
-            padding-bottom: 10px;
-        }
-
-        p, li {
-            margin-bottom: 15px;
-            color: #4a5568;
-            line-height: 1.8;
-        }
-
-        ul {
-            margin-left: 25px;
-            margin-bottom: 20px;
-        }
-
-        li {
-            margin-bottom: 10px;
-        }
-
-        .highlight-box {
-            background-color: #e8f4f8;
-            border-left: 4px solid #3498db;
-            padding: 20px;
-            margin: 25px 0;
-            border-radius: 4px;
-        }
-
-        .highlight-box h3 {
-            color: #2980b9;
-            margin-bottom: 10px;
-            font-size: 18px;
-        }
-
-        .privacy-icon {
-            display: inline-block;
-            width: 24px;
-            height: 24px;
-            margin-right: 8px;
-            vertical-align: middle;
-        }
-
-        .contact-section {
-            background-color: #f7fafc;
-            padding: 25px;
-            border-radius: 6px;
-            margin-top: 40px;
-        }
-
-        .contact-section h2 {
-            border: none;
-            margin-top: 0;
-        }
-
-        a {
-            color: #3498db;
-            text-decoration: none;
-        }
-
-        a:hover {
-            text-decoration: underline;
-        }
-
-        .permissions-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-        }
-
-        .permissions-table th,
-        .permissions-table td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #ecf0f1;
-        }
-
-        .permissions-table th {
-            background-color: #f8f9fa;
-            font-weight: 600;
-            color: #2c3e50;
-        }
-
-        @media (max-width: 768px) {
-            .container {
-                padding: 25px;
-            }
-
-            h1 {
-                font-size: 26px;
-            }
-
-            h2 {
-                font-size: 20px;
-            }
-        }
-    </style>
+    <meta name="color-scheme" content="dark light">
+    <title>Privacy Policy</title>
+    <meta name="description" content="Privacy policy for the Epic Games Library Exporter extension and the Epic Games Library Viewer.">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%233b82f6'/%3E%3Cpath d='M8 9h7v6H8zM17 9h7v6h-7zM8 17h7v6H8zM17 17h7v6h-7z' fill='white'/%3E%3C/svg%3E">
+    <script>
+        (function () {
+            var theme = 'dark';
+            try { theme = localStorage.getItem('egv.theme') || 'dark'; } catch (e) { /* storage unavailable */ }
+            if (theme !== 'system') document.documentElement.setAttribute('data-theme', theme === 'light' ? 'light' : 'dark');
+        })();
+    </script>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="../pages.css">
+    <script src="../versions.js" defer></script>
+    <script src="../pages.js" defer></script>
 </head>
 <body>
-    <div class="container">
-        <h1>
-            <span class="privacy-icon">🔒</span>
-            Epic Games Library Exporter - Privacy Policy
-        </h1>
-        <p class="last-updated">Last Updated: January 2025</p>
-
-        <div class="highlight-box">
-            <h3>🛡️ Your Privacy is Protected</h3>
-            <p><strong>Epic Games Library Exporter does not collect, store, or transmit any personal data.</strong> All processing happens locally on your computer, and your information never leaves your device.</p>
+    <header class="topbar">
+        <div class="topbar-inner">
+            <a class="back-link" id="back-link" href="../">
+                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2Z"/></svg>
+                <span>Back</span>
+            </a>
+            <span class="topbar-sep" aria-hidden="true"></span>
+            <a class="brand" href="../" aria-label="Library Viewer home">
+                <span class="brand-mark" aria-hidden="true"></span>
+                <span class="brand-name">Library</span>
+            </a>
+            <div class="topbar-actions">
+                <button class="icon-btn" id="theme-btn" type="button" title="Theme" aria-label="Change theme"></button>
+            </div>
         </div>
+    </header>
 
-        <h2>Overview</h2>
-        <p>This Privacy Policy explains how the Epic Games Library Exporter Chrome extension ("the Extension") handles user data. We are committed to protecting your privacy and being transparent about our data practices.</p>
-
-        <h2>Data Collection</h2>
-        <p><strong>We do not collect any data.</strong> The Extension:</p>
-        <ul>
-            <li>Does NOT collect personal information</li>
-            <li>Does NOT track your browsing activity</li>
-            <li>Does NOT store your Epic Games account information</li>
-            <li>Does NOT send data to any servers</li>
-            <li>Does NOT use analytics or tracking tools</li>
-            <li>Does NOT share data with third parties</li>
-        </ul>
-
-        <h2>How the Extension Works</h2>
-        <p>The Extension operates entirely within your browser:</p>
-        <ul>
-            <li><strong>Local Processing:</strong> When you export your library, the Extension reads data from the Epic Games website and processes it locally on your computer</li>
-            <li><strong>Direct Download:</strong> The processed data is saved directly to your computer as a text file</li>
-            <li><strong>No Server Communication:</strong> At no point does the Extension communicate with external servers</li>
-            <li><strong>User-Initiated:</strong> All actions are initiated by you - nothing happens automatically</li>
-        </ul>
-
-        <h2>Data Storage</h2>
-        <p>The Extension uses Chrome's local storage API only to save your export preferences (such as which fields to include in the export). This data:</p>
-        <ul>
-            <li>Is stored locally on your device</li>
-            <li>Is not accessible to us or any third party</li>
-            <li>Can be cleared by removing the Extension</li>
-            <li>Contains only your preference settings, not personal data</li>
-        </ul>
-
-        <h2>Permissions Explained</h2>
-        <p>The Extension requires certain permissions to function. Here's why we need each one:</p>
-        
-        <table class="permissions-table">
-            <thead>
-                <tr>
-                    <th>Permission</th>
-                    <th>Why It's Needed</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td><strong>scripting</strong></td>
-                    <td>To inject the export functionality into the Epic Games account page</td>
-                </tr>
-                <tr>
-                    <td><strong>storage</strong></td>
-                    <td>To save your export preferences locally</td>
-                </tr>
-                <tr>
-                    <td><strong>activeTab</strong></td>
-                    <td>To interact with the current tab when you click the Extension</td>
-                </tr>
-                <tr>
-                    <td><strong>tabs</strong></td>
-                    <td>To verify you're on the correct Epic Games page and open help pages</td>
-                </tr>
-                <tr>
-                    <td><strong>epicgames.com/account/*</strong></td>
-                    <td>Limited access only to Epic Games account pages for data export</td>
-                </tr>
-            </tbody>
-        </table>
-
-        <h2>Third-Party Services</h2>
-        <p>The Extension does not use any third-party services or analytics tools. It operates independently without any external dependencies.</p>
-
-        <h2>Data Security</h2>
-        <p>Since we don't collect or transmit any data, there are no security risks associated with data breaches or unauthorized access to our servers. Your Epic Games data is processed locally and saved directly to your computer.</p>
-
-        <h2>Children's Privacy</h2>
-        <p>The Extension does not knowingly collect any information from children under 13 years of age. Since we don't collect any data at all, this protection is inherently provided.</p>
-
-        <h2>Changes to This Policy</h2>
-        <p>We may update this Privacy Policy from time to time. Any changes will be posted on this page with an updated "Last Updated" date. Continued use of the Extension after changes constitutes acceptance of the updated policy.</p>
-
-        <h2>Open Source</h2>
-        <p>The Extension is open source. You can review the entire source code on our <a href="https://github.com/refaelcohe/epic-games-Library-viewer" target="_blank" rel="noopener noreferrer">GitHub repository</a> to verify our privacy practices.</p>
-
-        <h2>Your Rights</h2>
-        <p>Since we don't collect any personal data, there is no data to access, modify, or delete. You maintain complete control over your exported data files, which are stored locally on your computer.</p>
-
-        <div class="contact-section">
-            <h2>Contact Us</h2>
-            <p>If you have any questions or concerns about this Privacy Policy or the Extension's data practices, please:</p>
-            <ul>
-                <li>Visit our <a href="https://github.com/refaelcohe/epic-games-Library-viewer" target="_blank" rel="noopener noreferrer">GitHub repository</a></li>
-                <li>Open an issue on GitHub for technical questions</li>
-                <li>Review our source code to verify our practices</li>
+    <main class="page">
+        <section class="hero">
+            <div class="eyebrow">
+                <span>Privacy policy</span>
+                <span class="pill">Version <span data-version="privacy">2.0</span></span>
+                <span>Last updated <span data-updated="privacy">October 8, 2026</span></span>
+            </div>
+            <h1>Privacy Policy</h1>
+            <p class="lead">For the Epic Games Library Exporter Chrome extension and the Epic Games Library Viewer website.</p>
+            <div class="notice">
+                <h2>The short version</h2>
+                <p>We don't collect your data. There are no servers, accounts, analytics or tracking. Your purchase history is read and processed in your own browser, and it goes only where you choose: a file on your computer, or the Library Viewer in another tab.</p>
+            </div>
+            <ul class="toc" aria-label="Contents">
+                <li><a href="#extension">The extension</a></li>
+                <li><a href="#permissions">Permissions</a></li>
+                <li><a href="#viewer">The Library Viewer</a></li>
+                <li><a href="#third-parties">Third-party services</a></li>
+                <li><a href="#choices">Your choices</a></li>
+                <li><a href="#contact">Contact</a></li>
             </ul>
-        </div>
+        </section>
 
-        <p style="margin-top: 40px; text-align: center; color: #7f8c8d; font-size: 14px;">
-            Epic Games Library Exporter is not affiliated with Epic Games, Inc.<br>
-            Epic Games is a trademark of Epic Games, Inc.
-        </p>
-    </div>
+        <article class="policy">
+            <h2 id="who">Who we are</h2>
+            <p>The Epic Games Library Exporter ("the extension") and the Epic Games Library Viewer ("the Viewer") are independent projects by Refael Cohen. They are not affiliated with Epic Games, Inc. In this policy, "we" means the developer.</p>
+
+            <h2 id="extension">The Exporter extension</h2>
+
+            <h3>What it reads</h3>
+            <p>The extension does nothing until you click <strong>Export Library</strong> while you're on your Epic Games account page. It then reads your <strong>order history</strong> from Epic, in that tab and with the sign-in you already have there:</p>
+            <ul>
+                <li>game and item names, purchase dates and order IDs,</li>
+                <li>prices, discounts, taxes and totals,</li>
+                <li>the type of payment method used (for example "PayPal"), and gift recipients and order types when Epic provides them.</li>
+            </ul>
+            <p>It never reads or stores your password, and it doesn't read other websites or your browsing activity.</p>
+
+            <h3>Where the data goes</h3>
+            <p>When the export finishes, you choose what happens next:</p>
+            <ul>
+                <li><strong>Download a file:</strong> the data is saved as a JSON, CSV or TXT file on your computer.</li>
+                <li><strong>Open in the Library Viewer:</strong> the extension passes the data to the Viewer tab <strong>inside Chrome</strong>, not over the internet. Until the Viewer page asks for it, the data waits in Chrome's in-memory session storage for the extension. It is handed over <strong>once</strong>, then deleted immediately. Anything not picked up is deleted after 15 minutes, or when you close the browser.</li>
+            </ul>
+            <p>The data is never sent to us or to anyone else.</p>
+
+            <h3>What it stores</h3>
+            <ul>
+                <li><strong>Your export preferences</strong> (selected fields and default format), saved with <code>chrome.storage.sync</code>. If Chrome Sync is turned on, Google syncs them between your Chrome browsers.</li>
+                <li><strong>A progress estimate</strong>: after a full export, the number of orders and the dates of your newest and oldest orders, saved locally with <code>chrome.storage.local</code>. It is used only to make the next progress bar accurate.</li>
+            </ul>
+            <p>Both are removed when you uninstall the extension.</p>
+
+            <h2 id="permissions">Permissions</h2>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Permission</th><th>Why it's needed</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>activeTab</code></td><td>Lets the extension work in the tab you're on when you click it, and check that it's your Epic account page.</td></tr>
+                        <tr><td><code>scripting</code></td><td>Runs the export inside the Epic account page when you click Export.</td></tr>
+                        <tr><td><code>storage</code></td><td>Saves your export preferences and the progress estimate described above, and holds an export briefly while it's handed to the Library Viewer.</td></tr>
+                        <tr><td>Access to <code>accounts.epicgames.com</code> and <code>www.epicgames.com/account</code></td><td>Reads your order history from Epic's account pages. This is limited to these pages.</td></tr>
+                        <tr><td>Connection from <code>refaelcohe.github.io</code></td><td>Lets the Library Viewer page receive an export that you chose to open there. No other website can talk to the extension.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h2 id="viewer">The Library Viewer website</h2>
+            <ul>
+                <li><strong>Your files stay on your device.</strong> A file you load is read by your browser and is never uploaded.</li>
+                <li><strong>While the tab is open</strong>, your library is kept in that tab's session storage, so it survives a reload. Closing the tab clears it, and so does "Close library" in the menu.</li>
+                <li><strong>On your device</strong>, the Viewer remembers your theme, your export preferences and which cover image belongs to which game name, in your browser's local storage. You can clear this data in your browser settings at any time.</li>
+                <li>The Viewer uses <strong>no cookies, analytics, ads or tracking</strong>.</li>
+            </ul>
+
+            <h2 id="third-parties">Third-party services</h2>
+            <p>To work, the Viewer's pages make a few requests from your browser to these services. Like any website, they can see your IP address and the request itself:</p>
+            <ul>
+                <li><strong>Wikidata</strong> (Wikimedia Foundation): game names are looked up to find cover art. Only the game name is sent, never prices, dates or order details. See the <a href="https://foundation.wikimedia.org/wiki/Policy:Privacy_policy" target="_blank" rel="noopener">Wikimedia privacy policy</a>.</li>
+                <li><strong>Steam's image servers</strong> (Valve): the cover images are loaded from Steam's public image servers.</li>
+                <li><strong>GitHub Pages</strong> (GitHub): hosts the Viewer and these pages, and loads the developer photo on the About pages. See <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement" target="_blank" rel="noopener">GitHub's privacy statement</a>.</li>
+            </ul>
+            <p>The extension itself only talks to Epic Games, to read your order history.</p>
+
+            <h2 id="sharing">Sharing and selling</h2>
+            <p>We don't collect your data, so we never share it, sell it or use it for advertising.</p>
+
+            <h2 id="source">Transparency</h2>
+            <p>The Library Viewer's source code is public on <a href="https://github.com/refaelcohe/epic-games-Library-viewer" target="_blank" rel="noopener">GitHub</a>. The extension's code isn't minified, so anyone can inspect it in the extension's installed files.</p>
+
+            <h2 id="children">Children</h2>
+            <p>Neither product is directed at children under 13, and neither collects personal information from anyone.</p>
+
+            <h2 id="choices">Your choices</h2>
+            <ul>
+                <li>Delete exported files from your computer at any time.</li>
+                <li>Uninstall the extension to remove its preferences and progress estimate.</li>
+                <li>Clear the Viewer's data with "Close library", by closing the tab, or by clearing site data for <code>refaelcohe.github.io</code> in your browser.</li>
+            </ul>
+
+            <h2 id="changes">Changes to this policy</h2>
+            <p>If this policy changes, the new version will be posted here with a new version number and date.</p>
+
+            <h2 id="contact">Contact</h2>
+            <p>Questions about privacy? Open an issue on the <a href="https://github.com/refaelcohe/epic-games-Library-viewer/issues" target="_blank" rel="noopener">GitHub repository</a>.</p>
+        </article>
+    </main>
+
+    <footer class="site-footer">
+        <span>&copy; <span id="current-year">2026</span> Refael Cohen &middot; Not affiliated with Epic Games, Inc.</span>
+        <nav aria-label="Site">
+            <a href="../">Library Viewer</a>
+            <a href="../exporter_about_page.html">Exporter extension</a>
+            <a href="../Viewer_about_page.html">About the Viewer</a>
+        </nav>
+    </footer>
 </body>
 </html>
