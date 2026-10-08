@@ -67,7 +67,7 @@
             <h2 id="extension">The Exporter extension</h2>
 
             <h3>What it reads</h3>
-            <p>The extension does nothing until you click <strong>Export Library</strong> while you're on your Epic Games account page. It then reads your <strong>order history</strong> from Epic, in that tab and with the sign-in you already have there:</p>
+            <p>The extension does nothing until you click its icon. On your Epic Games account page, that opens the export options; on any other website, it only shows a short message pointing you to your Epic account page and reads nothing from that site. When you click <strong>Export library</strong>, it reads your <strong>order history</strong> from Epic, in that tab and with the sign-in you already have there:</p>
             <ul>
                 <li>game and item names, purchase dates and order IDs,</li>
                 <li>prices, discounts, taxes and totals,</li>
@@ -95,10 +95,10 @@
                 <table>
                     <thead><tr><th>Permission</th><th>Why it's needed</th></tr></thead>
                     <tbody>
-                        <tr><td><code>activeTab</code></td><td>Lets the extension work in the tab you're on when you click it, and check that it's your Epic account page.</td></tr>
-                        <tr><td><code>scripting</code></td><td>Runs the export inside the Epic account page when you click Export.</td></tr>
+                        <tr><td><code>activeTab</code></td><td>Lets the extension work in the tab you're on when you click its icon: it checks whether it's your Epic account page, and if not, shows the message pointing you there.</td></tr>
+                        <tr><td><code>scripting</code></td><td>Shows the extension's window on the page, and runs the export inside the Epic account page when you click Export library.</td></tr>
                         <tr><td><code>storage</code></td><td>Saves your export preferences and the progress estimate described above, and holds an export briefly while it's handed to the Library Viewer.</td></tr>
-                        <tr><td>Access to <code>accounts.epicgames.com</code> and <code>www.epicgames.com/account</code></td><td>Reads your order history from Epic's account pages. This is limited to these pages.</td></tr>
+                        <tr><td>Access to <code>accounts.epicgames.com</code> and <code>www.epicgames.com/account</code></td><td>Reads your order history from Epic's account pages, and opens the export options there when you ask the extension to take you to that page. This is limited to these pages.</td></tr>
                         <tr><td>Connection from <code>refaelcohe.github.io</code></td><td>Lets the Library Viewer page receive an export that you chose to open there. No other website can talk to the extension.</td></tr>
                     </tbody>
                 </table>
@@ -108,7 +108,7 @@
             <ul>
                 <li><strong>Your files stay on your device.</strong> A file you load is read by your browser and is never uploaded.</li>
                 <li><strong>While the tab is open</strong>, your library is kept in that tab's session storage, so it survives a reload. Closing the tab clears it, and so does "Close library" in the menu.</li>
-                <li><strong>On your device</strong>, the Viewer remembers your theme, your export preferences and which cover image belongs to which game name, in your browser's local storage. You can clear this data in your browser settings at any time.</li>
+                <li><strong>On your device</strong>, the Viewer remembers your theme, your export preferences and which cover image belongs to which game name (from Steam or Wikipedia), in your browser's local storage. You can clear this data in your browser settings at any time.</li>
                 <li>The Viewer uses <strong>no cookies, analytics, ads or tracking</strong>.</li>
             </ul>
 
@@ -117,6 +117,7 @@
             <ul>
                 <li><strong>Wikidata</strong> (Wikimedia Foundation): game names are looked up to find cover art. Only the game name is sent, never prices, dates or order details. See the <a href="https://foundation.wikimedia.org/wiki/Policy:Privacy_policy" target="_blank" rel="noopener">Wikimedia privacy policy</a>.</li>
                 <li><strong>Steam's image servers</strong> (Valve): the cover images are loaded from Steam's public image servers.</li>
+                <li><strong>Wikipedia</strong> (Wikimedia Foundation): for games that aren't on Steam, the game name is looked up on English Wikipedia, and the cover image loads from <code>upload.wikimedia.org</code>.</li>
                 <li><strong>GitHub Pages</strong> (GitHub): hosts the Viewer and these pages, and loads the developer photo on the About pages. See <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement" target="_blank" rel="noopener">GitHub's privacy statement</a>.</li>
             </ul>
             <p>The extension itself only talks to Epic Games, to read your order history.</p>
